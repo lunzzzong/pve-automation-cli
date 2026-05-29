@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+// ==========================================
+// 1. STRUCT & CONSTRUCTOR DEFINITIONS
+// ==========================================
+
 // PveClient stores connection details for Proxmox VE API
 type PveClient struct {
 	ApiUrl  string
@@ -32,13 +36,54 @@ func NewPveClient(apiUrl, tokenID, secret string) *PveClient {
 	}
 }
 
+// ==========================================
+// 2. METHOD DEFINITION (The "Smart Button")
+// ==========================================
+
+// GetVersion connects to PVE API and returns the raw JSON version data.
+// This method is bound to the *PveClient struct using a pointer receiver (c *PveClient).
+func (c *PveClient) GetVersion() (string, error) {
+	// Step A: Build the target URL using the struct's ApiUrl field
+	reqUrl := c.ApiUrl + "/version"
+	req, err := http.NewRequest("GET", reqUrl, nil)
+	if err != nil {
+		// Return empty string and the formatted error if setup fails
+		return "", fmt.Errorf("failed to create request: %v", err)
+	}
+
+	// Step B: Inject PVE specific API Token authentication into HTTP Header
+	authHeader := fmt.Sprintf("PVEAPIToken=%s=%s", c.TokenID, c.Secret)
+	req.Header.Add("Authorization", authHeader)
+
+	// Step C: Execute the HTTP request using the client's internal http client
+	resp, err := c.HttpCli.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to connect to PVE API: %v", err)
+	}
+	// Crucial: Ensure the response body is closed to prevent system resource leaks
+	defer resp.Body.Close()
+
+	// Step D: Read the raw binary data flow from the server response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	// Step E: Convert bytes to string and return it with nil (meaning no error)
+	return string(body), nil
+}
+
+// ==========================================
+// 3. MAIN EXECUTION ENTRYPOINT
+// ==========================================
+
 func main() {
 	// Retrieve Proxmox VE connection details from environment variables for security
 	apiUrl := os.Getenv("PVE_API_URL")
 	tokenID := os.Getenv("PVE_TOKEN_ID")
 	secret := os.Getenv("PVE_SECRET")
 
-	// Validate that all required environment variables are set
+	// Validate that all required environment variables are set before proceeding
 	if apiUrl == "" || tokenID == "" || secret == "" {
 		fmt.Println("[ERROR] Missing required environment variables: PVE_API_URL, PVE_TOKEN_ID, or PVE_SECRET")
 		return
@@ -47,29 +92,15 @@ func main() {
 	fmt.Println("Initializing Proxmox VE API client...")
 	client := NewPveClient(apiUrl, tokenID, secret)
 
-	// Build the target URL for testing API connectivity (Get PVE Version)
-	reqUrl := client.ApiUrl + "/version"
-	req, err := http.NewRequest("GET", reqUrl, nil)
+	fmt.Println("Fetching PVE node version via Method...")
+	//  Trigger the method we just created above!
+	rawJson, err := client.GetVersion()
 	if err != nil {
-		fmt.Printf("Failed to create HTTP request: %v\n", err)
+		// If the "alarm light" is on (err != nil), print error and exit
+		fmt.Printf("[ERROR] %v\n", err)
 		return
 	}
 
-	// Inject PVE specific API Token authentication into HTTP Header
-	authHeader := fmt.Sprintf("PVEAPIToken=%s=%s", client.TokenID, client.Secret)
-	req.Header.Add("Authorization", authHeader)
-
-	// Execute the HTTP request
-	resp, err := client.HttpCli.Do(req)
-	if err != nil {
-		fmt.Printf("Failed to connect to PVE API: %v\n", err)
-		return
-	}
-	// Ensure the response body is closed to prevent resource leaks
-	defer resp.Body.Close()
-
-	// Read and print the API response
-	body, _ := io.ReadAll(resp.Body)
-	fmt.Printf("HTTP Status Code: %d\n", resp.StatusCode)
-	fmt.Printf("PVE API Raw Response: %s\n", string(body))
+	// If everything is fine, print the final beautiful raw JSON result
+	fmt.Printf("PVE API Raw Response:\n%s\n", rawJson)
 }
