@@ -40,15 +40,15 @@ func NewPveClient(apiUrl, tokenID, secret string) *PveClient {
 // 2. METHOD DEFINITION (The "Smart Button")
 // ==========================================
 
-// GetVersion connects to PVE API and returns the raw JSON version data.
+// GetVersion connects to PVE API and returns status code, raw JSON string, and error.
 // This method is bound to the *PveClient struct using a pointer receiver (c *PveClient).
-func (c *PveClient) GetVersion() (string, error) {
+func (c *PveClient) GetVersion() (int, string, error) {
 	// Step A: Build the target URL using the struct's ApiUrl field
 	reqUrl := c.ApiUrl + "/version"
 	req, err := http.NewRequest("GET", reqUrl, nil)
 	if err != nil {
-		// Return empty string and the formatted error if setup fails
-		return "", fmt.Errorf("failed to create request: %v", err)
+		// Return default values and the formatted error if setup fails
+		return 0, "", fmt.Errorf("failed to create request: %v", err)
 	}
 
 	// Step B: Inject PVE specific API Token authentication into HTTP Header
@@ -58,7 +58,7 @@ func (c *PveClient) GetVersion() (string, error) {
 	// Step C: Execute the HTTP request using the client's internal http client
 	resp, err := c.HttpCli.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to connect to PVE API: %v", err)
+		return 0, "", fmt.Errorf("failed to connect to PVE API: %v", err)
 	}
 	// Crucial: Ensure the response body is closed to prevent system resource leaks
 	defer resp.Body.Close()
@@ -66,11 +66,11 @@ func (c *PveClient) GetVersion() (string, error) {
 	// Step D: Read the raw binary data flow from the server response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("failed to read response body: %v", err)
+		return resp.StatusCode, "", fmt.Errorf("failed to read response body: %v", err)
 	}
 
-	// Step E: Convert bytes to string and return it with nil (meaning no error)
-	return string(body), nil
+	// Step E: Return HTTP status code, raw JSON string, and nil (no error)
+	return resp.StatusCode, string(body), nil
 }
 
 // ==========================================
@@ -93,14 +93,15 @@ func main() {
 	client := NewPveClient(apiUrl, tokenID, secret)
 
 	fmt.Println("Fetching PVE node version via Method...")
-	//  Trigger the method we just created above!
-	rawJson, err := client.GetVersion()
+	// Trigger the method and receive three variables (statusCode, rawJson, err)
+	statusCode, rawJson, err := client.GetVersion()
 	if err != nil {
 		// If the "alarm light" is on (err != nil), print error and exit
 		fmt.Printf("[ERROR] %v\n", err)
 		return
 	}
 
-	// If everything is fine, print the final beautiful raw JSON result
+	// Output the final formatted results
+	fmt.Printf("HTTP Status Code: %d\n", statusCode)
 	fmt.Printf("PVE API Raw Response:\n%s\n", rawJson)
 }
