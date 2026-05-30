@@ -2,7 +2,7 @@ package main
 
 import (
 	"crypto/tls"
-	"encoding/json" // 💡 Added for JSON unmarshalling
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,19 +22,39 @@ type PveClient struct {
 	HttpCli *http.Client
 }
 
-// PveVersionData represents the inner fields of the PVE version response
-type PveVersionData struct {
-	Version string `json:"version"`
-	Release string `json:"release"`
+// PveNodeData represents the structure of an individual node from the cluster list
+type PveNodeData struct {
+	Node   string `json:"node"`
+	Status string `json:"status"`
 }
 
-// PveVersionResponse represents the top-level structure of the PVE version API response
-type PveVersionResponse struct {
-	Data PveVersionData `json:"data"`
+// PveNodesResponse represents the top-level structure for the /nodes cluster list API
+type PveNodesResponse struct {
+	Data []PveNodeData `json:"data"` // A slice (array) to hold multiple cluster nodes
 }
 
-// NewPveClient initializes and returns a new PveClient instance
+// PveNodeMemory represents the detailed memory metrics inside a specific node status
+type PveNodeMemory struct {
+	Used  int64 `json:"used"` // Memory bytes can be huge, using int64 to avoid overflow
+	Total int64 `json:"total"`
+}
+
+// PveNodeStatusData represents the actual real-time metrics of a specific node
+type PveNodeStatusData struct {
+	Cpu    float64       `json:"cpu"`
+	MaxCpu int           `json:"cpus"`   // Mapped to 'cpus' based on PVE 9.1.9 JSON payload
+	Memory PveNodeMemory `json:"memory"` // Nested memory struct for resource breakdown
+	Uptime int64         `json:"uptime"`
+}
+
+// PveNodeStatusResponse represents the top-level structure for the /nodes/{node}/status API
+type PveNodeStatusResponse struct {
+	Data PveNodeStatusData `json:"data"` // Single object containing real-time status metrics
+}
+
+// NewPveClient initializes and returns a new PveClient instance with insecure TLS safety bypass
 func NewPveClient(apiUrl, tokenID, secret string) *PveClient {
+	// Bypass self-signed certificate verification for homelab or internal cluster safety
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -48,12 +68,12 @@ func NewPveClient(apiUrl, tokenID, secret string) *PveClient {
 }
 
 // ==========================================
-// 2. METHOD DEFINITION (The "Smart Button")
+// 2. METHOD DEFINITIONS (API Actions)
 // ==========================================
 
-// GetVersion connects to PVE API and returns status code, raw JSON string, and error.
-func (c *PveClient) GetVersion() (int, string, error) {
-	reqUrl := c.ApiUrl + "/version"
+// GetNodes connects to /nodes endpoint and fetches the initial list of all cluster nodes
+func (c *PveClient) GetNodes() (int, string, error) {
+	reqUrl := c.ApiUrl + "/nodes"
 	req, err := http.NewRequest("GET", reqUrl, nil)
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to create request: %v", err)
@@ -76,11 +96,39 @@ func (c *PveClient) GetVersion() (int, string, error) {
 	return resp.StatusCode, string(body), nil
 }
 
+// GetNodeStatus connects to /nodes/{node}/status to query full real-time metrics dynamically
+func (c *PveClient) GetNodeStatus(nodeName string) (int, string, error) {
+	// Dynamic URL construction: dynamically injecting the target node name into the API path
+	reqUrl := fmt.Sprintf("%s/nodes/%s/status", c.ApiUrl, nodeName)
+
+	req, err := http.NewRequest("GET", reqUrl, nil)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to create request for node %s: %v", nodeName, err)
+	}
+
+	authHeader := fmt.Sprintf("PVEAPIToken=%s=%s", c.TokenID, c.Secret)
+	req.Header.Add("Authorization", authHeader)
+
+	resp, err := c.HttpCli.Do(req)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to connect to PVE node status API: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return resp.StatusCode, "", fmt.Errorf("failed to read node status response body: %v", err)
+	}
+
+	return resp.StatusCode, string(body), nil
+}
+
 // ==========================================
 // 3. MAIN EXECUTION ENTRYPOINT
 // ==========================================
 
 func main() {
+	// Fetching environment variables injected by user session
 	apiUrl := os.Getenv("PVE_API_URL")
 	tokenID := os.Getenv("PVE_TOKEN_ID")
 	secret := os.Getenv("PVE_SECRET")
@@ -93,24 +141,58 @@ func main() {
 	fmt.Println("Initializing Proxmox VE API client...")
 	client := NewPveClient(apiUrl, tokenID, secret)
 
-	fmt.Println("Fetching PVE node version via Method...")
-	statusCode, rawJson, err := client.GetVersion()
+	fmt.Println("Fetching PVE cluster nodes...")
+	statusCode, rawJson, err := client.GetNodes()
 	if err != nil {
 		fmt.Printf("[ERROR] %v\n", err)
 		return
 	}
 
-	// Milestone 3: Parse the raw JSON string into Go struct
-	var versionResp PveVersionResponse
-	err = json.Unmarshal([]byte(rawJson), &versionResp)
+	// Unmarshal the initial JSON response list into the PveNodesResponse slice
+	var nodesResp PveNodesResponse
+	err = json.Unmarshal([]byte(rawJson), &nodesResp)
 	if err != nil {
-		fmt.Printf("[ERROR] Failed to parse JSON: %v\n", err)
+		fmt.Printf("[ERROR] Failed to parse Nodes JSON: %v\n", err)
 		return
 	}
 
-	// Output the beautifully formatted results
-	fmt.Printf("HTTP Status Code: %d\n", statusCode)
-	fmt.Println("\n[Success] Connected to Proxmox VE successfully!")
-	fmt.Printf("-> PVE Version: %s\n", versionResp.Data.Version)
-	fmt.Printf("-> PVE Release: %s\n", versionResp.Data.Release)
+	fmt.Printf("HTTP Status Code (Cluster): %d\n", statusCode)
+	fmt.Println("\n[Success] Fetched PVE Cluster Nodes Successfully!")
+	fmt.Println("--------------------------------------------------------------------------------")
+
+	// Loop through each node dynamically to trigger real-time granular monitoring
+	for index, nodeItem := range nodesResp.Data {
+		// Chain execution: execute GetNodeStatus for each node extracted from the master list
+		_, statusJson, err := client.GetNodeStatus(nodeItem.Node)
+		if err != nil {
+			fmt.Printf("[%d] Node: %s | [ERROR] Failed to fetch real-time metrics: %v\n", index, nodeItem.Node, err)
+			continue // Gracefully skip failed nodes and keep the loop running
+		}
+
+		// Unmarshal the specific node's rich real-time object metrics
+		var statusResp PveNodeStatusResponse
+		err = json.Unmarshal([]byte(statusJson), &statusResp)
+		if err != nil {
+			fmt.Printf("[%d] Node: %s | [ERROR] Failed to parse status JSON\n", index, nodeItem.Node)
+			continue
+		}
+
+		// Data conversion: Translate raw bytes into human-readable Gigabytes (GB)
+		memUsedGB := float64(statusResp.Data.Memory.Used) / 1024 / 1024 / 1024
+		memTotalGB := float64(statusResp.Data.Memory.Total) / 1024 / 1024 / 1024
+		memPercent := (float64(statusResp.Data.Memory.Used) / float64(statusResp.Data.Memory.Total)) * 100
+
+		// Render final production-grade CLI telemetry monitoring output
+		fmt.Printf("[%d] Node: %-6s | Status: %-6s | Real CPU: %5.2f%% (%d Cores) | Mem: %5.2fGB / %5.2fGB (%5.2f%%)\n",
+			index,
+			nodeItem.Node,
+			nodeItem.Status,
+			statusResp.Data.Cpu*100, // Format float value into actual percentage representation
+			statusResp.Data.MaxCpu,
+			memUsedGB,
+			memTotalGB,
+			memPercent,
+		)
+	}
+	fmt.Println("--------------------------------------------------------------------------------")
 }
