@@ -14,7 +14,7 @@ A production-grade command-line interface (CLI) monitoring tool engineered in **
 
 ---
 
-## 🛠️ Architecture & Data Workflow
+## Architecture & Data Workflow
 
 1.  **Authentication**: Injects custom `PVEAPIToken` authorizations into outbound HTTP request headers.
 2.  **TLS Security Bypass**: Configures custom `tls.Config` transport wrappers (`InsecureSkipVerify: true`) to seamlessly bypass self-signed homelab/enterprise SSL certificate blocks.
@@ -33,7 +33,7 @@ A production-grade command-line interface (CLI) monitoring tool engineered in **
 
 ---
 
-## 📋 System Prerequisites & Installation
+## System Prerequisites & Installation
 
 ### 1. Configure Environmental Variables
 The binary reads operational credentials directly from the host environment to enforce zero-hardcoded-secret security principles.
