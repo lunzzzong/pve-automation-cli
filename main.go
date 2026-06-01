@@ -52,6 +52,20 @@ type PveNodeStatusResponse struct {
 	Data PveNodeStatusData `json:"data"` // Single object containing real-time status metrics
 }
 
+// PveVmData represents the structure of an individual VM
+type PveVmData struct {
+	Vmid   int    `json:"vmid"`   // VM ID is an integer
+	Name   string `json:"name"`   // VM Name is a string
+	Status string `json:"status"` // VM Status (running/stopped)
+	Type   string `json:"type"`   // Resource type (qemu/lxc/storage...)
+}
+
+// PveVmsResponse represents the top-level structure for cluster resources
+type PveVmsResponse struct {
+	// 💡 Fixed: Added [] to make it a slice/array so 'range' can iterate through it
+	Data []PveVmData `json:"data"`
+}
+
 // NewPveClient initializes and returns a new PveClient instance with insecure TLS safety bypass
 func NewPveClient(apiUrl, tokenID, secret string) *PveClient {
 	// Bypass self-signed certificate verification for homelab or internal cluster safety
@@ -118,6 +132,33 @@ func (c *PveClient) GetNodeStatus(nodeName string) (int, string, error) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return resp.StatusCode, "", fmt.Errorf("failed to read node status response body: %v", err)
+	}
+
+	return resp.StatusCode, string(body), nil
+}
+
+// GetVms connects to /cluster/resources and fetches all cluster resources (including VMs)
+func (c *PveClient) GetVms() (int, string, error) {
+	// Dynamically building the path for cluster-wide resources
+	reqUrl := c.ApiUrl + "/cluster/resources"
+
+	req, err := http.NewRequest("GET", reqUrl, nil)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to create request for VMs: %v", err)
+	}
+
+	authHeader := fmt.Sprintf("PVEAPIToken=%s=%s", c.TokenID, c.Secret)
+	req.Header.Add("Authorization", authHeader)
+
+	resp, err := c.HttpCli.Do(req)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to connect to PVE resource API: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return resp.StatusCode, "", fmt.Errorf("failed to read resource response body: %v", err)
 	}
 
 	return resp.StatusCode, string(body), nil
@@ -193,6 +234,37 @@ func main() {
 			memTotalGB,
 			memPercent,
 		)
+	}
+
+	fmt.Println("\nFetching PVE cluster virtual machines...")
+	// Trigger the VM retrieval method
+	vmStatusCode, vmRawJson, err := client.GetVms()
+	if err != nil {
+		fmt.Printf("[ERROR] Failed to fetch VMs: %v\n", err)
+		return
+	}
+
+	// Initialize the newly corrected VM array structure
+	var vmsResp PveVmsResponse
+
+	// Parse JSON payload into the VM response struct
+	err = json.Unmarshal([]byte(vmRawJson), &vmsResp)
+	if err != nil {
+		fmt.Printf("[ERROR] Failed to parse VMs JSON: %v\n", err)
+		return
+	}
+
+	fmt.Printf("HTTP Status Code (VMs): %d\n", vmStatusCode)
+	fmt.Println("\n[Success] Fetched VM List Successfully!")
+	fmt.Println("--------------------------------------------------------------------------------")
+
+	// Iterate through cluster resource list, filtering down to virtual environments only
+	for _, vmItem := range vmsResp.Data {
+		// Enforce strict filtering constraint to target 'qemu' workload assets exclusively
+		if vmItem.Type == "qemu" {
+			fmt.Printf("VM ID: %-5d | VM Name: %-15s | Status: %s\n",
+				vmItem.Vmid, vmItem.Name, vmItem.Status)
+		}
 	}
 	fmt.Println("--------------------------------------------------------------------------------")
 }
