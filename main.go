@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 // ==========================================
@@ -170,6 +172,7 @@ func (c *PveClient) GetVms() (int, string, error) {
 
 func main() {
 	// Fetching environment variables injected by user session
+	_ = godotenv.Load()
 	apiUrl := os.Getenv("PVE_API_URL")
 	tokenID := os.Getenv("PVE_TOKEN_ID")
 	secret := os.Getenv("PVE_SECRET")
@@ -258,13 +261,39 @@ func main() {
 	fmt.Println("\n[Success] Fetched VM List Successfully!")
 	fmt.Println("--------------------------------------------------------------------------------")
 
+	statusCounter := make(map[string]int)
+
+	filterStatus := "running"
 	// Iterate through cluster resource list, filtering down to virtual environments only
 	for _, vmItem := range vmsResp.Data {
 		// Enforce strict filtering constraint to target 'qemu' workload assets exclusively
 		if vmItem.Type == "qemu" {
+			statusIcon := ""
+			switch vmItem.Status {
+
+			case "running":
+				statusIcon = "🟢 RUNNING"
+				statusCounter["running"]++
+
+			case "stopped":
+				statusIcon = "🔴 STOPPED"
+				statusCounter["stopped"]++
+
+			default:
+				statusIcon = "⚪ UNKNOWN"
+				statusCounter["unknown"]++
+			}
+
+			if filterStatus != "all" && vmItem.Status != filterStatus {
+				continue
+			}
+
 			fmt.Printf("VM ID: %-5d | VM Name: %-15s | Status: %s\n",
-				vmItem.Vmid, vmItem.Name, vmItem.Status)
+				vmItem.Vmid, vmItem.Name, statusIcon)
 		}
 	}
+	fmt.Printf("\n [Cluster Workload Health Summary]")
+	fmt.Printf("Total Running VMs : %d 🟢\n", statusCounter["running"])
+	fmt.Printf("Total Stopped VMs : %d 🔴\n", statusCounter["stopped"])
 	fmt.Println("--------------------------------------------------------------------------------")
 }
