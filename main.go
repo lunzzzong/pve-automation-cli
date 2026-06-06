@@ -64,8 +64,7 @@ type PveVmData struct {
 
 // PveVmsResponse represents the top-level structure for cluster resources
 type PveVmsResponse struct {
-	// 💡 Fixed: Added [] to make it a slice/array so 'range' can iterate through it
-	Data []PveVmData `json:"data"`
+	Data []PveVmData `json:"data"` // A slice holding clustered workload environments
 }
 
 // NewPveClient initializes and returns a new PveClient instance with insecure TLS safety bypass
@@ -114,7 +113,6 @@ func (c *PveClient) GetNodes() (int, string, error) {
 
 // GetNodeStatus connects to /nodes/{node}/status to query full real-time metrics dynamically
 func (c *PveClient) GetNodeStatus(nodeName string) (int, string, error) {
-	// Dynamic URL construction: dynamically injecting the target node name into the API path
 	reqUrl := fmt.Sprintf("%s/nodes/%s/status", c.ApiUrl, nodeName)
 
 	req, err := http.NewRequest("GET", reqUrl, nil)
@@ -141,7 +139,6 @@ func (c *PveClient) GetNodeStatus(nodeName string) (int, string, error) {
 
 // GetVms connects to /cluster/resources and fetches all cluster resources (including VMs)
 func (c *PveClient) GetVms() (int, string, error) {
-	// Dynamically building the path for cluster-wide resources
 	reqUrl := c.ApiUrl + "/cluster/resources"
 
 	req, err := http.NewRequest("GET", reqUrl, nil)
@@ -171,7 +168,7 @@ func (c *PveClient) GetVms() (int, string, error) {
 // ==========================================
 
 func main() {
-	// Fetching environment variables injected by user session
+	// Initialize environment configuration pipeline using godotenv
 	_ = godotenv.Load()
 	apiUrl := os.Getenv("PVE_API_URL")
 	tokenID := os.Getenv("PVE_TOKEN_ID")
@@ -192,7 +189,6 @@ func main() {
 		return
 	}
 
-	// Unmarshal the initial JSON response list into the PveNodesResponse slice
 	var nodesResp PveNodesResponse
 	err = json.Unmarshal([]byte(rawJson), &nodesResp)
 	if err != nil {
@@ -204,16 +200,13 @@ func main() {
 	fmt.Println("\n[Success] Fetched PVE Cluster Nodes Successfully!")
 	fmt.Println("--------------------------------------------------------------------------------")
 
-	// Loop through each node dynamically to trigger real-time granular monitoring
 	for index, nodeItem := range nodesResp.Data {
-		// Chain execution: execute GetNodeStatus for each node extracted from the master list
 		_, statusJson, err := client.GetNodeStatus(nodeItem.Node)
 		if err != nil {
 			fmt.Printf("[%d] Node: %s | [ERROR] Failed to fetch real-time metrics: %v\n", index, nodeItem.Node, err)
-			continue // Gracefully skip failed nodes and keep the loop running
+			continue
 		}
 
-		// Unmarshal the specific node's rich real-time object metrics
 		var statusResp PveNodeStatusResponse
 		err = json.Unmarshal([]byte(statusJson), &statusResp)
 		if err != nil {
@@ -221,17 +214,15 @@ func main() {
 			continue
 		}
 
-		// Data conversion: Translate raw bytes into human-readable Gigabytes (GB)
 		memUsedGB := float64(statusResp.Data.Memory.Used) / 1024 / 1024 / 1024
 		memTotalGB := float64(statusResp.Data.Memory.Total) / 1024 / 1024 / 1024
 		memPercent := (float64(statusResp.Data.Memory.Used) / float64(statusResp.Data.Memory.Total)) * 100
 
-		// Render final production-grade CLI telemetry monitoring output
 		fmt.Printf("[%d] Node: %-6s | Status: %-6s | Real CPU: %5.2f%% (%d Cores) | Mem: %5.2fGB / %5.2fGB (%5.2f%%)\n",
 			index,
 			nodeItem.Node,
 			nodeItem.Status,
-			statusResp.Data.Cpu*100, // Format float value into actual percentage representation
+			statusResp.Data.Cpu*100,
 			statusResp.Data.MaxCpu,
 			memUsedGB,
 			memTotalGB,
@@ -240,17 +231,13 @@ func main() {
 	}
 
 	fmt.Println("\nFetching PVE cluster virtual machines...")
-	// Trigger the VM retrieval method
 	vmStatusCode, vmRawJson, err := client.GetVms()
 	if err != nil {
 		fmt.Printf("[ERROR] Failed to fetch VMs: %v\n", err)
 		return
 	}
 
-	// Initialize the newly corrected VM array structure
 	var vmsResp PveVmsResponse
-
-	// Parse JSON payload into the VM response struct
 	err = json.Unmarshal([]byte(vmRawJson), &vmsResp)
 	if err != nil {
 		fmt.Printf("[ERROR] Failed to parse VMs JSON: %v\n", err)
@@ -261,29 +248,30 @@ func main() {
 	fmt.Println("\n[Success] Fetched VM List Successfully!")
 	fmt.Println("--------------------------------------------------------------------------------")
 
+	// Initialize metrics mapping table to accumulate real-time workload quantities
 	statusCounter := make(map[string]int)
 
+	// Local filtering configuration flag to scope runtime workload display
 	filterStatus := "running"
-	// Iterate through cluster resource list, filtering down to virtual environments only
+
 	for _, vmItem := range vmsResp.Data {
-		// Enforce strict filtering constraint to target 'qemu' workload assets exclusively
 		if vmItem.Type == "qemu" {
 			statusIcon := ""
-			switch vmItem.Status {
 
+			// Map strict runtime state strings into visualized telemetry indicators
+			switch vmItem.Status {
 			case "running":
 				statusIcon = "🟢 RUNNING"
 				statusCounter["running"]++
-
 			case "stopped":
 				statusIcon = "🔴 STOPPED"
 				statusCounter["stopped"]++
-
 			default:
 				statusIcon = "⚪ UNKNOWN"
 				statusCounter["unknown"]++
 			}
 
+			// Enforce active control-flow constraint filter to dynamically bypass unmatched objects
 			if filterStatus != "all" && vmItem.Status != filterStatus {
 				continue
 			}
@@ -292,7 +280,13 @@ func main() {
 				vmItem.Vmid, vmItem.Name, statusIcon)
 		}
 	}
-	fmt.Printf("\n [Cluster Workload Health Summary]")
+
+	// Dynamic temporal execution tracking: capturing precise execution runtime telemetry
+	currentTime := time.Now()
+	formattedTime := currentTime.Format("2006-01-02 15:04:05")
+
+	// Optimized layout: Merging time context into a consolidated execution header
+	fmt.Printf("\n[Cluster Workload Health Summary] - Generated at: %s\n", formattedTime)
 	fmt.Printf("Total Running VMs : %d 🟢\n", statusCounter["running"])
 	fmt.Printf("Total Stopped VMs : %d 🔴\n", statusCounter["stopped"])
 	fmt.Println("--------------------------------------------------------------------------------")
