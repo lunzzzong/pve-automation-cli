@@ -16,6 +16,17 @@ import (
 // 1. STRUCT & CONSTRUCTOR DEFINITIONS
 // ==========================================
 
+// PveApiError is a custom error struct engineered to capture both HTTP context and system faults
+type PveApiError struct {
+	StatusCode int
+	Message    string
+}
+
+// Error implements the standard Go error interface to enable specialized debugging telemetry
+func (e *PveApiError) Error() string {
+	return fmt.Sprintf("PVE API Fault (Status: %d): %s", e.StatusCode, e.Message)
+}
+
 // PveClient stores connection details for Proxmox VE API
 type PveClient struct {
 	ApiUrl  string
@@ -84,6 +95,7 @@ func NewPveClient(apiUrl, tokenID, secret string) *PveClient {
 // 2. METHOD DEFINITIONS (API Actions)
 // ==========================================
 
+// GetNodes connects to /nodes endpoint and evaluates response correctness natively
 func (c *PveClient) GetNodes() (int, string, error) {
 	reqUrl := c.ApiUrl + "/nodes"
 	req, err := http.NewRequest("GET", reqUrl, nil)
@@ -98,6 +110,14 @@ func (c *PveClient) GetNodes() (int, string, error) {
 		return 0, "", fmt.Errorf("failed to connect to PVE API: %v", err)
 	}
 	defer resp.Body.Close()
+
+	// 🛠️ Milestone 6: Intercept failed HTTP requests and return explicit custom PveApiError
+	if resp.StatusCode != http.StatusOK {
+		return resp.StatusCode, "", &PveApiError{
+			StatusCode: resp.StatusCode,
+			Message:    http.StatusText(resp.StatusCode),
+		}
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -157,16 +177,13 @@ func (c *PveClient) GetVms() (int, string, error) {
 func main() {
 	_ = godotenv.Load()
 
-	// 20260607: Initialize persistent file logging pipeline with 0644 user permissions
 	logFile, err := os.OpenFile("cluster_health.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		fmt.Printf("[ERROR] Failed to create log file: %v\n", err)
 		return
 	}
-	// Defensive engineering: defer resource release until main execution termination block
 	defer logFile.Close()
 
-	// 20260607: Construct dual-stream multi-writer interface to fork logs to stdout & disk
 	mw := io.MultiWriter(os.Stdout, logFile)
 
 	apiUrl := os.Getenv("PVE_API_URL")
@@ -184,7 +201,12 @@ func main() {
 	fmt.Fprintln(mw, "Fetching PVE cluster nodes...")
 	statusCode, rawJson, err := client.GetNodes()
 	if err != nil {
-		fmt.Fprintf(mw, "[ERROR] %v\n", err)
+		// 🛠️ Milestone 6: Execute type assertion switch to unpack rich error telemetry context
+		if pveErr, ok := err.(*PveApiError); ok {
+			fmt.Fprintf(mw, "[CRITICAL] PVE Server Refused Request! Status: %d | Reason: %s\n", pveErr.StatusCode, pveErr.Message)
+		} else {
+			fmt.Fprintf(mw, "[NETWORK ERROR] Generic connection fault: %v\n", err)
+		}
 		return
 	}
 
