@@ -269,10 +269,20 @@ func main() {
 	fmt.Fprintln(mw, "\n[Success] Fetched VM List Successfully!")
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 
+	// Implement slice boundary checking to prevent runtime panic
+	limit := 3
+	maxDisplay := limit
+	if len(vmsResp.Data) < limit {
+		maxDisplay = len(vmsResp.Data)
+	}
+	limitedVMs := vmsResp.Data[0:maxDisplay]
+
+	fmt.Fprintf(mw, "\n[Telemetry] Displaying top %d VM workloads:\n", maxDisplay)
+
 	statusCounter := make(map[string]int)
 	filterStatus := "running"
 
-	for _, vmItem := range vmsResp.Data {
+	for _, vmItem := range limitedVMs {
 		if vmItem.Type == "qemu" {
 			statusIcon := ""
 			switch vmItem.Status {
