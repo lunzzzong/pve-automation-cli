@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 // ==========================================
@@ -71,7 +74,7 @@ type PveVmsResponse struct {
 // 2. CONSTRUCTORS & METHOD DEFINITIONS
 // ==========================================
 
-// NewPveClient acts as a constructor allocating a custom transport pipeline with TLS bypass
+// NewPveClient acts as a low-level constructor allocating a custom transport pipeline with TLS bypass
 func NewPveClient(apiUrl, tokenID, secret string) *PveClient {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -82,6 +85,22 @@ func NewPveClient(apiUrl, tokenID, secret string) *PveClient {
 		Secret:  secret,
 		HttpCli: &http.Client{Transport: tr, Timeout: 10 * time.Second},
 	}
+}
+
+// NewPveClientFromEnv automates environment configuration parsing with native boundary sanity checks
+func NewPveClientFromEnv() (*PveClient, error) {
+	_ = godotenv.Load()
+	apiUrl := os.Getenv("PVE_API_URL")
+	tokenID := os.Getenv("PVE_TOKEN_ID")
+	secret := os.Getenv("PVE_SECRET")
+
+	// Defensive engineering: Validate that all critical identity variables are present
+	if apiUrl == "" || tokenID == "" || secret == "" {
+		return nil, fmt.Errorf("missing required environment variables: PVE_API_URL, PVE_TOKEN_ID, or PVE_SECRET")
+	}
+
+	// Dynamic delegation: Propagate verified configs to the underlying connection constructor
+	return NewPveClient(apiUrl, tokenID, secret), nil
 }
 
 // GetNodes fetches the cluster top-level machine nodes index map securely

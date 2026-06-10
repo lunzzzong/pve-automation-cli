@@ -6,13 +6,13 @@ import (
 	"io"
 	"os"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
-func main() {
-	_ = godotenv.Load()
+// ==========================================
+// 3. MAIN EXECUTION ENTRYPOINT
+// ==========================================
 
+func main() {
 	// Establish concurrent file logging descriptor pipelines with standard system write access overrides
 	logFile, err := os.OpenFile("cluster_health.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -24,17 +24,12 @@ func main() {
 	// Fork standard console outputs into file streams concurrently via multi-writer decoupling wrappers
 	mw := io.MultiWriter(os.Stdout, logFile)
 
-	apiUrl := os.Getenv("PVE_API_URL")
-	tokenID := os.Getenv("PVE_TOKEN_ID")
-	secret := os.Getenv("PVE_SECRET")
-
-	if apiUrl == "" || tokenID == "" || secret == "" {
-		fmt.Fprintln(mw, "[ERROR] Missing required environment variables: PVE_API_URL, PVE_TOKEN_ID, or PVE_SECRET")
+	// Encapsulated setup: Initialize client instance directly by extracting decoupled environment contexts
+	client, err := NewPveClientFromEnv()
+	if err != nil {
+		fmt.Fprintf(mw, "[CRITICAL] Initialization architecture failed: %v\n", err)
 		return
 	}
-
-	fmt.Fprintln(mw, "Initializing Proxmox VE API client...")
-	client := NewPveClient(apiUrl, tokenID, secret)
 
 	// ==========================================
 	// NODE MONITORING SUBSYSTEM PIPELINE
