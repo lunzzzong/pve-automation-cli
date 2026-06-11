@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag" // Milestone 8: Import native flag package for advanced CLI tuning
 	"fmt"
 	"io"
 	"os"
@@ -13,6 +14,9 @@ import (
 // ==========================================
 
 func main() {
+	// Define arguments at the very beginning. Returns a pointer (*int) rather than raw value.
+	limitPtr := flag.Int("limit", 3, "The maximum number of VM workloads to display in the telemetry output")
+
 	// Establish concurrent file logging descriptor pipelines with standard system write access overrides
 	logFile, err := os.OpenFile("cluster_health.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -23,6 +27,9 @@ func main() {
 
 	// Fork standard console outputs into file streams concurrently via multi-writer decoupling wrappers
 	mw := io.MultiWriter(os.Stdout, logFile)
+
+	// Execute parsing explicitly after the multi-writer is wired but before connection bootstrapping
+	flag.Parse()
 
 	// Encapsulated setup: Initialize client instance directly by extracting decoupled environment contexts
 	client, err := NewPveClientFromEnv()
@@ -99,8 +106,8 @@ func main() {
 	fmt.Fprintln(mw, "\n[Success] Fetched VM List Successfully!")
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 
-	// Intercept array slicing operations to isolate dynamic runtime boundary panics
-	limit := 3
+	// Milestone 8: Dereference our parameter pointer securely to fetch custom boundaries dynamically
+	limit := *limitPtr
 	maxDisplay := limit
 	if len(vmsResp.Data) < limit {
 		maxDisplay = len(vmsResp.Data)
