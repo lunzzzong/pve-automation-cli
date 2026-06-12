@@ -6,7 +6,7 @@ The application implements enterprise software patterns including **decoupled mu
 
 ---
 
-## 🛠️ High-Performance Architecture Features
+## High-Performance Architecture Features
 
 * **Decoupled Architecture (`pve.go` & `main.go`)**: Strict separation of concerns (SoC). API interaction, data modeling, and validation logic are fully separated from the main runner routine to maximize code reusability.
 * **Enterprise Defense Engineering**: 
