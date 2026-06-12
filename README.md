@@ -33,7 +33,6 @@ PVE_SECRET="your-proxmox-api-token-secret-uuid"
 ### 3. Compilation & Runtime Instantiation
 
 To execute the modularized workspace concurrently, initiate the directory run command:
-PowerShell
 ```
 go run .
 ```
@@ -49,7 +48,6 @@ go run . -limit 5
 B. Compute Workload Status Filtering (-filter)
 
 Isolate cluster assets dynamically by target statuses (Options: running, stopped, all. Default: running).
-
 ```
 # Audit hypervisor components that are currently powered down
 go run . -filter stopped
@@ -58,7 +56,6 @@ go run . -filter stopped
 go run . -filter all
 ```
 C. Advanced Multi-Argument Composition
-
 ```
 go run . -limit 10 -filter all
 ```
@@ -69,7 +66,6 @@ Generate embedded telemetry flags definition matrices directly:
 go run . -h
 ```
 ### Core Operational Flow Data Visualization
-
 ```
 [User Input Switch] ──► flag.Parse() ──► Pointer Dereference (*) ──► filterStatus Whiteboard
                                                                              │
