@@ -70,6 +70,7 @@ go run . -h
 ```
 ### Core Operational Flow Data Visualization
 
+```
 [User Input Switch] ──► flag.Parse() ──► Pointer Dereference (*) ──► filterStatus Whiteboard
                                                                              │
 [Proxmox Cluster]   ──► JSON Stream  ──► Unmarshal Structural Slices ────► Guard Inspection (if/continue)
@@ -77,4 +78,4 @@ go run . -h
                                                                              ▼
                                                                  Dual-Stream MultiWriter Output
                                                                  (Console Monitor & cluster_health.log)
-
+```
