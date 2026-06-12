@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"flag" // Milestone 8: Import native flag package for advanced CLI tuning
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -14,8 +14,9 @@ import (
 // ==========================================
 
 func main() {
-	// Define arguments at the very beginning. Returns a pointer (*int) rather than raw value.
+	// Define arguments at the very beginning. Returns pointers (*int, *string) rather than raw values.
 	limitPtr := flag.Int("limit", 3, "The maximum number of VM workloads to display in the telemetry output")
+	filterPtr := flag.String("filter", "running", "Filter VMs by status (options: running, stopped, all)")
 
 	// Establish concurrent file logging descriptor pipelines with standard system write access overrides
 	logFile, err := os.OpenFile("cluster_health.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
@@ -106,7 +107,7 @@ func main() {
 	fmt.Fprintln(mw, "\n[Success] Fetched VM List Successfully!")
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 
-	// Milestone 8: Dereference our parameter pointer securely to fetch custom boundaries dynamically
+	// Dereference our parameter pointer securely to fetch custom boundaries dynamically
 	limit := *limitPtr
 	maxDisplay := limit
 	if len(vmsResp.Data) < limit {
@@ -117,7 +118,9 @@ func main() {
 	fmt.Fprintf(mw, "\n[Telemetry] Displaying top %d VM workloads:\n", maxDisplay)
 
 	statusCounter := make(map[string]int)
-	filterStatus := "running"
+
+	// Dereference status filter string natively
+	filterStatus := *filterPtr
 
 	for _, vmItem := range limitedVMs {
 		if vmItem.Type == "qemu" {
@@ -134,11 +137,13 @@ func main() {
 				statusCounter["unknown"]++
 			}
 
+			// Decoupled filtering switch using runtime arguments instead of compile-time hardcoding
 			if filterStatus != "all" && vmItem.Status != filterStatus {
 				continue
 			}
 
-			fmt.Fprintf(mw, "VM ID: %-5d | VM Name: %-15s | Status: %s\n", vmItem.Vmid, vmItem.Name, statusIcon)
+			fmt.Fprintf(mw, "VM ID: %-5d | VM Name: %-15s | Status: %s\n",
+				vmItem.Vmid, vmItem.Name, statusIcon)
 		}
 	}
 
