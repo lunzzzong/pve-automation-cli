@@ -1,0 +1,358 @@
+Initializing Proxmox VE API client...
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.14GB / 31.35GB (48.30%)
+[1] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.98GB / 31.35GB (25.45%)
+[2] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.54GB / 15.62GB (16.28%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+VM ID: 104   | VM Name: Debian          | Status: 🟢 RUNNING
+VM ID: 106   | VM Name: Windows         | Status: 🟢 RUNNING
+VM ID: 107   | VM Name: windows-server-2022 | Status: 🟢 RUNNING
+VM ID: 7777  | VM Name: exporter        | Status: 🟢 RUNNING
+
+ [Cluster Workload Health Summary] - Generated at: 2026-06-07 09:25:33
+Total Running VMs : 4 🟢
+Total Stopped VMs : 8 🔴
+--------------------------------------------------------------------------------
+Initializing Proxmox VE API client...
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.69GB / 31.35GB (24.53%)
+[1] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 14.96GB / 31.35GB (47.72%)
+[2] Node: pve2   | Status: online | Real CPU:  8.44% (0 Cores) | Mem:  2.66GB / 15.62GB (17.02%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+VM ID: 104   | VM Name: Debian          | Status: 🟢 RUNNING
+VM ID: 106   | VM Name: Windows         | Status: 🟢 RUNNING
+VM ID: 107   | VM Name: windows-server-2022 | Status: 🟢 RUNNING
+VM ID: 7777  | VM Name: exporter        | Status: 🟢 RUNNING
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-07 09:26:51
+Total Running VMs : 4 🟢
+Total Stopped VMs : 8 🔴
+--------------------------------------------------------------------------------
+Initializing Proxmox VE API client...
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.53GB / 15.62GB (16.20%)
+[1] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.00GB / 31.35GB (47.84%)
+[2] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.69GB / 31.35GB (24.55%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+VM ID: 104   | VM Name: Debian          | Status: 🟢 RUNNING
+VM ID: 106   | VM Name: Windows         | Status: 🟢 RUNNING
+VM ID: 107   | VM Name: windows-server-2022 | Status: 🟢 RUNNING
+VM ID: 7777  | VM Name: exporter        | Status: 🟢 RUNNING
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-08 09:32:56
+Total Running VMs : 4 🟢
+Total Stopped VMs : 8 🔴
+--------------------------------------------------------------------------------
+Initializing Proxmox VE API client...
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.77GB / 31.35GB (24.79%)
+[1] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.55GB / 15.62GB (16.30%)
+[2] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.18GB / 31.35GB (48.42%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-09 09:38:52
+Total Running VMs : 0 🟢
+Total Stopped VMs : 3 🔴
+--------------------------------------------------------------------------------
+Initializing Proxmox VE API client...
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.33GB / 31.35GB (48.92%)
+[1] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.61GB / 15.62GB (16.72%)
+[2] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.89GB / 31.35GB (25.17%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-10 16:42:11
+Total Running VMs : 0 🟢
+Total Stopped VMs : 3 🔴
+--------------------------------------------------------------------------------
+Initializing Proxmox VE API client...
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.82GB / 31.35GB (24.96%)
+[1] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.36GB / 31.35GB (48.99%)
+[2] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.53GB / 15.62GB (16.20%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-10 16:42:25
+Total Running VMs : 0 🟢
+Total Stopped VMs : 3 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve1   | Status: online | Real CPU: 27.17% (0 Cores) | Mem: 15.30GB / 31.35GB (48.81%)
+[1] Node: pve2   | Status: online | Real CPU: 12.13% (0 Cores) | Mem:  2.60GB / 15.62GB (16.68%)
+[2] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.81GB / 31.35GB (24.92%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-10 17:29:29
+Total Running VMs : 0 🟢
+Total Stopped VMs : 3 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.14GB / 31.35GB (48.31%)
+[1] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.63GB / 15.62GB (16.81%)
+[2] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.64GB / 31.35GB (24.38%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-11 10:50:49
+Total Running VMs : 0 🟢
+Total Stopped VMs : 3 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.78GB / 31.35GB (24.81%)
+[1] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.58GB / 15.62GB (16.53%)
+[2] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.09GB / 31.35GB (48.15%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 1 VM workloads:
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-11 10:50:57
+Total Running VMs : 0 🟢
+Total Stopped VMs : 1 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.64GB / 15.62GB (16.93%)
+[1] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.11GB / 31.35GB (48.20%)
+[2] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.82GB / 31.35GB (24.96%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+VM ID: 100   | VM Name: 100             | Status: 🔴 STOPPED
+VM ID: 101   | VM Name: 101             | Status: 🔴 STOPPED
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-12 11:26:14
+Total Running VMs : 0 🟢
+Total Stopped VMs : 2 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.69GB / 15.62GB (17.24%)
+[1] Node: pve1   | Status: online | Real CPU: 25.76% (0 Cores) | Mem: 15.20GB / 31.35GB (48.49%)
+[2] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.67GB / 31.35GB (24.48%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+VM ID: 100   | VM Name: 100             | Status: 🔴 STOPPED
+VM ID: 101   | VM Name: 101             | Status: 🔴 STOPPED
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-12 11:26:22
+Total Running VMs : 0 🟢
+Total Stopped VMs : 2 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.63GB / 15.62GB (16.82%)
+[1] Node: pve1   | Status: online | Real CPU: 38.87% (0 Cores) | Mem: 15.27GB / 31.35GB (48.71%)
+[2] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.82GB / 31.35GB (24.95%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 5 VM workloads:
+VM ID: 100   | VM Name: 100             | Status: 🔴 STOPPED
+VM ID: 101   | VM Name: 101             | Status: 🔴 STOPPED
+VM ID: 102   | VM Name: 102             | Status: 🔴 STOPPED
+VM ID: 103   | VM Name: 103             | Status: 🔴 STOPPED
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-12 11:26:47
+Total Running VMs : 0 🟢
+Total Stopped VMs : 4 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.13GB / 31.35GB (48.26%)
+[1] Node: pve2   | Status: online | Real CPU:  8.38% (0 Cores) | Mem:  2.59GB / 15.62GB (16.60%)
+[2] Node: pve3   | Status: online | Real CPU: 40.40% (0 Cores) | Mem:  7.86GB / 31.35GB (25.08%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+VM ID: 100   | VM Name: 100             | Status: 🔴 STOPPED
+VM ID: 101   | VM Name: 101             | Status: 🔴 STOPPED
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-12 11:27:10
+Total Running VMs : 0 🟢
+Total Stopped VMs : 2 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve2   | Status: online | Real CPU:  7.57% (0 Cores) | Mem:  2.61GB / 15.62GB (16.71%)
+[1] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.27GB / 31.35GB (48.72%)
+[2] Node: pve3   | Status: online | Real CPU: 42.55% (0 Cores) | Mem:  8.00GB / 31.35GB (25.51%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-12 11:27:19
+Total Running VMs : 0 🟢
+Total Stopped VMs : 2 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve1   | Status: online | Real CPU: 34.79% (0 Cores) | Mem: 15.32GB / 31.35GB (48.87%)
+[1] Node: pve2   | Status: online | Real CPU:  5.85% (0 Cores) | Mem:  2.62GB / 15.62GB (16.76%)
+[2] Node: pve3   | Status: online | Real CPU: 39.35% (0 Cores) | Mem:  7.96GB / 31.35GB (25.40%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-12 11:27:40
+Total Running VMs : 0 🟢
+Total Stopped VMs : 2 🔴
+--------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve2   | Status: online | Real CPU: 11.16% (0 Cores) | Mem:  2.71GB / 15.62GB (17.33%)
+[1] Node: pve1   | Status: online | Real CPU: 28.82% (0 Cores) | Mem: 15.13GB / 31.35GB (48.28%)
+[2] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  7.77GB / 31.35GB (24.80%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 VM workloads:
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-12 11:27:57
+Total Running VMs : 0 🟢
+Total Stopped VMs : 2 🔴
+--------------------------------------------------------------------------------
