@@ -41,7 +41,7 @@ go run .
 The utility ships with native, dynamic runtime evaluation overrides. You can dynamically filter workloads and toggle limits directly from your terminal interface without recompiling source codes:
 A. Telemetry Scope Slicing Limit (-limit)
 
-Restrict the dashboard display ceiling safely (Default: 3)
+Restrict the dashboard display ceiling safely (Default: 3).
 ```
 go run . -limit 5
 ```
