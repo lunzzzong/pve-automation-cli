@@ -3,7 +3,7 @@
 A production-grade, highly defense-engineered Command Line Interface (CLI) utility built in Go (Golang) designed to monitor and audit Proxmox VE cluster infrastructure workloads seamlessly. 
 
 The application implements enterprise software patterns including **decoupled multi-stream logging**, **custom API diagnostic state introspection**, **runtime defense slicing bounds checking**, and **dynamic argument filtering**.
-
+!
 ---
 
 ## High-Performance Architecture Features  
