@@ -60,15 +60,19 @@ type PveNodeStatusResponse struct {
 }
 
 type PveVmData struct {
-	Vmid   int    `json:"vmid"`
-	Name   string `json:"name"`
-	Status string `json:"status"`
-	Type   string `json:"type"`
+	Vmid   int     `json:"vmid"`
+	Name   string  `json:"name"`
+	Status string  `json:"status"`
+	Type   string  `json:"type"`
+	CPU    float64 `json:"cpu"`
 }
 
 type PveVmsResponse struct {
 	Data []PveVmData `json:"data"`
 }
+
+// REFACTORED: TitleCase naming standard alignment to bridge main.go interfaces
+type VMList []PveVmData
 
 // ==========================================
 // 2. CONSTRUCTORS & METHOD DEFINITIONS
@@ -180,4 +184,21 @@ func (c *PveClient) GetVms() (int, string, error) {
 		return resp.StatusCode, "", fmt.Errorf("failed to read resource response body: %v", err)
 	}
 	return resp.StatusCode, string(body), nil
+}
+
+// Len returns the cardinality bounds dynamically for index calculations
+func (v VMList) Len() int {
+	return len(v)
+}
+
+// Swap exchanges elements out-of-order in-place securely using native tuple decoupling
+// MODIFIED: Capitalized 'Swap' to implement sort.Interface properly
+func (v VMList) Swap(i, j int) {
+	v[i], v[j] = v[j], v[i]
+}
+
+// Less evaluates ordering parameters to achieve descending risk allocation metrics
+// MODIFIED: Capitalized 'Less' and switched field pointer to the verified uppercase .CPU
+func (v VMList) Less(i, j int) bool {
+	return v[i].CPU > v[j].CPU
 }

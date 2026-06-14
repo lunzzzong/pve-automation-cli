@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -107,6 +108,19 @@ func main() {
 	fmt.Fprintln(mw, "\n[Success] Fetched VM List Successfully!")
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 
+	// ADDED: Real-time global telemetry auditing BEFORE sorting and slicing.
+	// This captures the true cluster-wide metrics instead of being biased by the CLI display limit.
+	statusCounter := make(map[string]int)
+	for _, vmItem := range vmsResp.Data {
+		if vmItem.Type == "qemu" {
+			statusCounter[vmItem.Status]++
+		}
+	}
+
+	// Dynamic type conversion to trigger our custom sort.Interface blueprint
+	vmsToSort := VMList(vmsResp.Data)
+	sort.Sort(vmsToSort)
+
 	// Dereference our parameter pointer securely to fetch custom boundaries dynamically
 	limit := *limitPtr
 	maxDisplay := limit
@@ -115,9 +129,8 @@ func main() {
 	}
 	limitedVMs := vmsResp.Data[0:maxDisplay]
 
-	fmt.Fprintf(mw, "\n[Telemetry] Displaying top %d VM workloads:\n", maxDisplay)
-
-	statusCounter := make(map[string]int)
+	// MODIFIED: Explicitly indicate that the output is prioritized by high-risk resource consumption
+	fmt.Fprintf(mw, "\n[Telemetry] Displaying top %d high-risk VM workloads (Sorted by CPU):\n", maxDisplay)
 
 	// Dereference status filter string natively
 	filterStatus := *filterPtr
@@ -128,13 +141,10 @@ func main() {
 			switch vmItem.Status {
 			case "running":
 				statusIcon = "🟢 RUNNING"
-				statusCounter["running"]++
 			case "stopped":
 				statusIcon = "🔴 STOPPED"
-				statusCounter["stopped"]++
 			default:
 				statusIcon = "⚪ UNKNOWN"
-				statusCounter["unknown"]++
 			}
 
 			// Decoupled filtering switch using runtime arguments instead of compile-time hardcoding
@@ -142,16 +152,18 @@ func main() {
 				continue
 			}
 
-			fmt.Fprintf(mw, "VM ID: %-5d | VM Name: %-15s | Status: %s\n",
-				vmItem.Vmid, vmItem.Name, statusIcon)
+			// MODIFIED: Injected real-time CPU metric evaluation (%5.2f%%) into the console layout to aid infrastructure troubleshooting
+			fmt.Fprintf(mw, "VM ID: %-5d | VM Name: %-15s | CPU: %5.2f%% | Status: %s\n",
+				vmItem.Vmid, vmItem.Name, vmItem.CPU*100, statusIcon)
 		}
 	}
 
 	currentTime := time.Now()
 	formattedTime := currentTime.Format("2006-01-02 15:04:05")
 
+	// MODIFIED: Summary now accurately reflects total hypervisor status metrics globally rather than a sliced view
 	fmt.Fprintf(mw, "\n[Cluster Workload Health Summary] - Generated at: %s\n", formattedTime)
-	fmt.Fprintf(mw, "Total Running VMs : %d 🟢\n", statusCounter["running"])
-	fmt.Fprintf(mw, "Total Stopped VMs : %d 🔴\n", statusCounter["stopped"])
+	fmt.Fprintf(mw, "Total Running VMs in Cluster : %d 🟢\n", statusCounter["running"])
+	fmt.Fprintf(mw, "Total Stopped VMs in Cluster : %d 🔴\n", statusCounter["stopped"])
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 }
