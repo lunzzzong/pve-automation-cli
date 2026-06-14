@@ -356,3 +356,25 @@ HTTP Status Code (VMs): 200
 Total Running VMs : 0 🟢
 Total Stopped VMs : 2 🔴
 --------------------------------------------------------------------------------
+Fetching PVE cluster nodes...
+HTTP Status Code (Cluster): 200
+
+[Success] Fetched PVE Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.64GB / 15.62GB (16.88%)
+[1] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.31GB / 31.35GB (48.83%)
+[2] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  8.05GB / 31.35GB (25.69%)
+
+Fetching PVE cluster virtual machines...
+HTTP Status Code (VMs): 200
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 high-risk VM workloads (Sorted by CPU):
+VM ID: 7777  | VM Name: exporter        | CPU:  8.52% | Status: 🟢 RUNNING
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-14 16:40:38
+Total Running VMs in Cluster : 4 🟢
+Total Stopped VMs in Cluster : 9 🔴
+--------------------------------------------------------------------------------
