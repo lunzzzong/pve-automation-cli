@@ -91,49 +91,52 @@ func main() {
 	// VM WORKLOAD MONITORING SUBSYSTEM PIPELINE
 	// ==========================================
 	fmt.Fprintln(mw, "\nFetching PVE cluster virtual machines...")
-	vmStatusCode, vmRawJson, err := client.GetVms()
+
+	// ✨ DECOUPLED CALL: Orchestrate the retrieval using our high-level client wrapper.
+	// We no longer see raw HTTP or json.Unmarshal mechanics polluting main()!
+	vmsData, err := client.FetchAndParseVms()
 	if err != nil {
-		fmt.Fprintf(mw, "[ERROR] Failed to fetch VMs: %v\n", err)
+		fmt.Fprintf(mw, "[CRITICAL] VM Telemetry retrieval architecture failed: %v\n", err)
 		return
 	}
 
-	var vmsResp PveVmsResponse
-	err = json.Unmarshal([]byte(vmRawJson), &vmsResp)
-	if err != nil {
-		fmt.Fprintf(mw, "[ERROR] Failed to parse VMs JSON: %v\n", err)
-		return
-	}
-
-	fmt.Fprintf(mw, "HTTP Status Code (VMs): %d\n", vmStatusCode)
-	fmt.Fprintln(mw, "\n[Success] Fetched VM List Successfully!")
+	fmt.Fprintln(mw, "\n[Success] Fetched and Decoupled VM List Successfully!")
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 
-	// ADDED: Real-time global telemetry auditing BEFORE sorting and slicing.
+	// ==========================================
+	// ✨ GLOBAL WORKLOAD AUDIT & TELEMETRY INFRASTRUCTURE
+	// ==========================================
+	// Real-time global telemetry auditing BEFORE sorting and slicing.
 	// This captures the true cluster-wide metrics instead of being biased by the CLI display limit.
 	statusCounter := make(map[string]int)
-	for _, vmItem := range vmsResp.Data {
+	for _, vmItem := range vmsData {
 		if vmItem.Type == "qemu" {
 			statusCounter[vmItem.Status]++
 		}
 	}
 
-	// Dynamic type conversion to trigger our custom sort.Interface blueprint
-	vmsToSort := VMList(vmsResp.Data)
-	sort.Sort(vmsToSort)
+	// ==========================================
+	// ✨ HIGH-RISK RESOURCE ALLOCATION SORTING PIPELINE
+	// ==========================================
+	// Invoke the standard sorting algorithm engine by passing our domain-specific VMList.
+	// Because client.FetchAndParseVms() returns a VMList type natively,
+	// we can pass it directly to sort.Sort() without explicit type casting!
+	sort.Sort(vmsData)
 
-	// Dereference our parameter pointer securely to fetch custom boundaries dynamically
+	// Dereference our parameter pointers securely to fetch custom boundaries dynamically
 	limit := *limitPtr
-	maxDisplay := limit
-	if len(vmsResp.Data) < limit {
-		maxDisplay = len(vmsResp.Data)
-	}
-	limitedVMs := vmsResp.Data[0:maxDisplay]
-
-	// MODIFIED: Explicitly indicate that the output is prioritized by high-risk resource consumption
-	fmt.Fprintf(mw, "\n[Telemetry] Displaying top %d high-risk VM workloads (Sorted by CPU):\n", maxDisplay)
-
-	// Dereference status filter string natively
 	filterStatus := *filterPtr
+
+	maxDisplay := limit
+	if len(vmsData) < limit {
+		maxDisplay = len(vmsData)
+	}
+
+	// Slice the sorted array up to the dynamic display limits safely
+	limitedVMs := vmsData[0:maxDisplay]
+
+	// Explicitly indicate that the output is prioritized by high-risk resource consumption
+	fmt.Fprintf(mw, "\n[Telemetry] Displaying top %d high-risk VM workloads (Sorted by CPU):\n", maxDisplay)
 
 	for _, vmItem := range limitedVMs {
 		if vmItem.Type == "qemu" {
@@ -152,7 +155,7 @@ func main() {
 				continue
 			}
 
-			// MODIFIED: Injected real-time CPU metric evaluation (%5.2f%%) into the console layout to aid infrastructure troubleshooting
+			// Injected real-time CPU metric evaluation (%5.2f%%) into the console layout to aid infrastructure troubleshooting
 			fmt.Fprintf(mw, "VM ID: %-5d | VM Name: %-15s | CPU: %5.2f%% | Status: %s\n",
 				vmItem.Vmid, vmItem.Name, vmItem.CPU*100, statusIcon)
 		}
@@ -161,7 +164,7 @@ func main() {
 	currentTime := time.Now()
 	formattedTime := currentTime.Format("2006-01-02 15:04:05")
 
-	// MODIFIED: Summary now accurately reflects total hypervisor status metrics globally rather than a sliced view
+	// Summary now accurately reflects total hypervisor status metrics globally rather than a sliced view
 	fmt.Fprintf(mw, "\n[Cluster Workload Health Summary] - Generated at: %s\n", formattedTime)
 	fmt.Fprintf(mw, "Total Running VMs in Cluster : %d 🟢\n", statusCounter["running"])
 	fmt.Fprintf(mw, "Total Stopped VMs in Cluster : %d 🔴\n", statusCounter["stopped"])
