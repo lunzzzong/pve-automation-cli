@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -201,4 +202,37 @@ func (v VMList) Swap(i, j int) {
 // MODIFIED: Capitalized 'Less' and switched field pointer to the verified uppercase .CPU
 func (v VMList) Less(i, j int) bool {
 	return v[i].CPU > v[j].CPU
+}
+
+// FetchAndParseVms acts as a high-level domain orchestrator that encapsulates
+// the entire raw network transport layer and JSON unmarshalling guardrails.
+// It abstracts away the raw string payload and returns a clean, decoupled VMList slice.
+func (c *PveClient) FetchAndParseVms() (VMList, error) {
+	// 1. Dispatch the underlying low-level resource resource endpoint request
+	statusCode, rawJson, err := c.GetVms()
+	if err != nil {
+		// Using %w to implement modern error wrapping for deep telemetry tracing
+		return nil, fmt.Errorf("failed to fetch cluster resources: %w", err)
+	}
+
+	// 2. Assert HTTP transport status boundaries securely
+	if statusCode != http.StatusOK {
+		return nil, &PveApiError{
+			StatusCode: statusCode,
+			Message:    "PVE cluster infrastructure returned an unexpected status code",
+		}
+	}
+
+	// 3. Allocate a structured memory buffer acting as the target data receiver
+	var vmsResp PveVmsResponse
+
+	// 4. Invoke the unmarshal worker by passing the memory address pointer (&vmsResp)
+	// This dynamically decodes the raw byte slice into the allocated struct fields
+	err = json.Unmarshal([]byte(rawJson), &vmsResp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal internal PVE VMs data payload: %w", err)
+	}
+
+	// 5. Extract and propagate the cleanly parsed data slice up to the main logic pipeline
+	return vmsResp.Data, nil
 }
