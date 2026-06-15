@@ -92,7 +92,7 @@ func main() {
 	// ==========================================
 	fmt.Fprintln(mw, "\nFetching PVE cluster virtual machines...")
 
-	// ✨ DECOUPLED CALL: Orchestrate the retrieval using our high-level client wrapper.
+	// DECOUPLED CALL: Orchestrate the retrieval using our high-level client wrapper.
 	// We no longer see raw HTTP or json.Unmarshal mechanics polluting main()!
 	vmsData, err := client.FetchAndParseVms()
 	if err != nil {
@@ -104,8 +104,6 @@ func main() {
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 
 	// ==========================================
-	// ✨ GLOBAL WORKLOAD AUDIT & TELEMETRY INFRASTRUCTURE
-	// ==========================================
 	// Real-time global telemetry auditing BEFORE sorting and slicing.
 	// This captures the true cluster-wide metrics instead of being biased by the CLI display limit.
 	statusCounter := make(map[string]int)
@@ -116,7 +114,7 @@ func main() {
 	}
 
 	// ==========================================
-	// ✨ HIGH-RISK RESOURCE ALLOCATION SORTING PIPELINE
+	// HIGH-RISK RESOURCE ALLOCATION SORTING PIPELINE
 	// ==========================================
 	// Invoke the standard sorting algorithm engine by passing our domain-specific VMList.
 	// Because client.FetchAndParseVms() returns a VMList type natively,
