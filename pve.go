@@ -15,6 +15,16 @@ import (
 // ==========================================
 // 1. DATA STRUCTS & CUSTOM ERROR
 // ==========================================
+// Create new noderesult struct
+type NodeResult struct {
+	Name       string
+	Status     string
+	CpuPercent float64
+	CpuCores   int
+	MemUsedGB  float64
+	MemTotalGB float64
+	MemPercent float64
+}
 
 // PveApiError wraps HTTP fault boundaries for advanced diagnostic state introspection
 type PveApiError struct {
@@ -235,4 +245,61 @@ func (c *PveClient) FetchAndParseVms() (VMList, error) {
 
 	// 5. Extract and propagate the cleanly parsed data slice up to the main logic pipeline
 	return vmsResp.Data, nil
+}
+
+// FetchAndParseNodesDetailed acts as an aggregation orchestrator that dispatches
+// N+1 infrastructure telemetry inquiries across the cluster.
+// It automatically encapsulates transport parsing, dynamic resource calculation,
+// and filters out downstream failures to return a clean slice of NodeResult domain models.
+func (c *PveClient) FetchAndParseNodesDetailed() ([]NodeResult, error) {
+	// 1. Dispatch the primary cluster registry request to obtain the global node manifest
+	_, rawJson, err := c.GetNodes()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch cluster inventory nodes list: %w", err)
+	}
+
+	var nodesResp PveNodesResponse
+	if err := json.Unmarshal([]byte(rawJson), &nodesResp); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal infrastructure nodes list payload: %w", err)
+	}
+
+	// 2. Pre-allocate a structured telemetry buffer tracking dynamic system health metrics
+	var finalResults []NodeResult
+
+	// 3. Initiate sequential resource lookup pipelines for each active hypervisor node
+	for _, nodeItem := range nodesResp.Data {
+		_, statusJson, err := c.GetNodeStatus(nodeItem.Node)
+		if err != nil {
+			// Fault Tolerance Guardrail: Securely skip disconnected/unreachable nodes
+			// without crashing the global control loop telemetry
+			continue
+		}
+
+		var statusResp PveNodeStatusResponse
+		if err := json.Unmarshal([]byte(statusJson), &statusResp); err != nil {
+			continue
+		}
+
+		// 4. Transform raw byte streams natively into floating-point Gigabyte metrics
+		memUsed := float64(statusResp.Data.Memory.Used) / 1024 / 1024 / 1024
+		memTotal := float64(statusResp.Data.Memory.Total) / 1024 / 1024 / 1024
+		memPercent := (memUsed / memTotal) * 100
+
+		// 5. Hydrate the structured NodeResult data container with the calculated telemetry state
+		singleNode := NodeResult{
+			Name:       nodeItem.Node,
+			Status:     nodeItem.Status,
+			CpuPercent: statusResp.Data.Cpu * 100, // Normalize raw decimal into explicit percentage representation
+			CpuCores:   statusResp.Data.MaxCpu,
+			MemUsedGB:  memUsed,
+			MemTotalGB: memTotal,
+			MemPercent: memPercent,
+		}
+
+		// 6. Propagate the newly aggregated metrics node structure into the final collection slice
+		finalResults = append(finalResults, singleNode)
+	}
+
+	// 7. Yield the fully populated cluster health snapshot up to the main application presentation layer
+	return finalResults, nil
 }
