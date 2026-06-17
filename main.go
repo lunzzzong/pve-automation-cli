@@ -18,8 +18,11 @@ func main() {
 	limitPtr := flag.Int("limit", 3, "The maximum number of VM workloads to display")
 	filterPtr := flag.String("filter", "running", "Filter VMs by status (running, stopped, all)")
 
+	// Generate a dynamic log filename appended with the current calendar date
+	logFilename := fmt.Sprintf("cluster_health_%s.log", time.Now().Format("2006-01-02"))
 	// Setup logging descriptor
-	logFile, err := os.OpenFile("cluster_health.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	logFile, err := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+
 	if err != nil {
 		fmt.Printf("[ERROR] Failed to create log file: %v\n", err)
 		return
