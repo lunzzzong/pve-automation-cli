@@ -303,3 +303,15 @@ func (c *PveClient) FetchAndParseNodesDetailed() ([]NodeResult, error) {
 	// 7. Yield the fully populated cluster health snapshot up to the main application presentation layer
 	return finalResults, nil
 }
+
+// GetStatusIcon maps the raw lowercase VM status string to a production-ready console indicator emoji
+func (vm PveVmData) GetStatusIcon() string {
+	switch vm.Status {
+	case "running":
+		return "🟢 RUNNING"
+	case "stopped":
+		return "🔴 STOPPED"
+	default:
+		return "⚪ UNKNOWN"
+	}
+}
