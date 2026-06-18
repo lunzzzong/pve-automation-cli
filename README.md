@@ -64,6 +64,7 @@ Generate embedded telemetry flags definition matrices directly:
 ```
 go run . -h
 ```
+!
 ### Core Operational Flow Data Visualization
 ```
 [User Input Switch] ──► flag.Parse() ──► Pointer Dereference (*) ──► filterStatus Whiteboard
