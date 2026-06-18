@@ -103,23 +103,13 @@ func main() {
 
 	for _, vmItem := range limitedVMs {
 		if vmItem.Type == "qemu" {
-			statusIcon := ""
-			switch vmItem.Status {
-			case "running":
-				statusIcon = "🟢 RUNNING"
-			case "stopped":
-				statusIcon = "🔴 STOPPED"
-			default:
-				statusIcon = "⚪ UNKNOWN"
-			}
-
 			// Apply runtime status filter
 			if filterStatus != "all" && vmItem.Status != filterStatus {
 				continue
 			}
 
 			fmt.Fprintf(mw, "VM ID: %-5d | VM Name: %-15s | CPU: %5.2f%% | Status: %s\n",
-				vmItem.Vmid, vmItem.Name, vmItem.CPU*100, statusIcon)
+				vmItem.Vmid, vmItem.Name, vmItem.CPU*100, vmItem.GetStatusIcon())
 		}
 	}
 
