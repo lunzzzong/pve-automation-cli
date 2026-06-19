@@ -113,8 +113,10 @@ func main() {
 		}
 	}
 
-	currentTime := time.Now()
-	formattedTime := currentTime.Format("2006-01-02 15:04:05")
+	// currentTime := time.Now()
+	// formattedTime := currentTime.Format("2006-01-02 15:04:05")
+	// Format current system timestamp natively using Method Chaining
+	formattedTime := time.Now().Format("2006-01-02 15:04:05")
 
 	// Render cluster health summary
 	fmt.Fprintf(mw, "\n[Cluster Workload Health Summary] - Generated at: %s\n", formattedTime)
