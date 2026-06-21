@@ -1,0 +1,20 @@
+Fetching PVE cluster nodes...
+
+[Success] Fetched Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  8.31GB / 31.35GB (26.52%)
+[1] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.86GB / 15.62GB (18.28%)
+[2] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.24GB / 31.35GB (48.63%)
+
+Fetching PVE cluster virtual machines...
+
+[Success] Fetched VM List Successfully!
+--------------------------------------------------------------------------------
+
+[Telemetry] Displaying top 3 high-risk VM workloads (Sorted by CPU):
+VM ID: 7777  | VM Name: exporter        | CPU:  9.96% | Status: 🟢 RUNNING
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-21 17:38:07
+Total Running VMs in Cluster : 4 🟢
+Total Stopped VMs in Cluster : 9 🔴
+--------------------------------------------------------------------------------

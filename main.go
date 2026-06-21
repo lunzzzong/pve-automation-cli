@@ -77,7 +77,7 @@ func main() {
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 
 	// Calculate cluster-wide VM stats before sorting/slicing
-	statusCounter := make(map[string]int)
+	statusCounter := make(map[string]int, 3)
 	for _, vmItem := range vmsData {
 		if vmItem.Type == "qemu" {
 			statusCounter[vmItem.Status]++
