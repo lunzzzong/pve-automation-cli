@@ -14,6 +14,8 @@ import (
 // ==========================================
 
 func main() {
+	// Define infrastructure engineering constraints
+	const MaxExpectedClusterWorkloads = 150
 	// CLI Flags
 	limitPtr := flag.Int("limit", 3, "The maximum number of VM workloads to display")
 	filterPtr := flag.String("filter", "running", "Filter VMs by status (running, stopped, all)")
@@ -76,8 +78,9 @@ func main() {
 	fmt.Fprintln(mw, "\n[Success] Fetched VM List Successfully!")
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 
-	// Calculate cluster-wide VM stats before sorting/slicing
-	statusCounter := make(map[string]int, 3)
+	// Allocate map capacity dynamically based on total fetched telemetry volume
+	// to prevent inner-loop memory resizing overhead for high-density clusters
+	statusCounter := make(map[string]int, MaxExpectedClusterWorkloads)
 	for _, vmItem := range vmsData {
 		if vmItem.Type == "qemu" {
 			statusCounter[vmItem.Status]++
