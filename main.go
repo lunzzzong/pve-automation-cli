@@ -14,31 +14,60 @@ import (
 // ==========================================
 
 func main() {
-	// Define infrastructure engineering constraints
+	// Define infrastructure engineering constraints to throttle memory churning
 	const MaxExpectedClusterWorkloads = 150
-	// CLI Flags
+
+	// Register command-line flags under global registry context
 	limitPtr := flag.Int("limit", 3, "The maximum number of VM workloads to display")
 	filterPtr := flag.String("filter", "running", "Filter VMs by status (running, stopped, all)")
 
 	// Generate a dynamic log filename appended with the current calendar date
 	logFilename := fmt.Sprintf("cluster_health_%s.log", time.Now().Format("2006-01-02"))
-	// Setup logging descriptor
-	logFile, err := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 
+	// Initialize standard localized file descriptor for immutable operational logging
+	logFile, err := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		fmt.Printf("[ERROR] Failed to create log file: %v\n", err)
 		return
 	}
 	defer logFile.Close()
 
-	// Fork console output to log file
+	// Establish synchronized MultiWriter pipeline to fork output streams telemetry
 	mw := io.MultiWriter(os.Stdout, logFile)
-	flag.Parse()
 
-	// Init PVE Client from environment variables
+	// =========================================================================
+	// 20260622 CONTROL PLANE ARCHITECTURE: Subcommand Triage Routing Engine
+	// =========================================================================
+
+	// Enforce defensive programming guardrail: Halt execution if no subcommand is declared
+	if len(os.Args) < 2 {
+		fmt.Fprintln(mw, "[ERROR] Missing triage subcommand context.")
+		fmt.Fprintln(mw, "Usage: pvectl [doctor | diagnose | workflow] [options]")
+		os.Exit(1)
+	}
+
+	// Intercept and extract primary operational context token
+	subcommand := os.Args[1]
+
+	switch subcommand {
+	case "doctor", "diagnose":
+		fmt.Fprintf(mw, "Launching pvectl [%s] triage routine...\n", subcommand)
+
+		// Advanced Slice Slicing: Strip away binary path and subcommand context,
+		// routing only downstream flags to the legacy parsing controller.
+		flag.CommandLine.Parse(os.Args[2:])
+
+	default:
+		fmt.Fprintf(mw, "[ERROR] Unknown tactical subcommand '%s'. Execute 'pvectl' for operational help.\n", subcommand)
+		os.Exit(1)
+	}
+
+	// =========================================================================
+
+	// Initialize secure Proxmox API client backend from local environment state variables
 	client, err := NewPveClientFromEnv()
 	if err != nil {
-		fmt.Fprintf(mw, "[CRITICAL] Initialization failed: %v\n", err)
+		fmt.Fprintf(mw, "[CRITICAL] Infrastructure controller initialization failed: %v\n", err)
 		return
 	}
 

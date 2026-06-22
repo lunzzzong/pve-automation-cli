@@ -1,79 +1,42 @@
-# Proxmox VE Automation CLI (`pve-automation-cli`)
+# pvectl
 
-A production-grade, highly defense-engineered Command Line Interface (CLI) utility built in Go (Golang) designed to monitor and audit Proxmox VE cluster infrastructure workloads seamlessly. 
+An operations-focused automation CLI for Proxmox VE designed to simplify infrastructure management and accelerate troubleshooting during incidents.
 
-The application implements enterprise software patterns including **decoupled multi-stream logging**, **custom API diagnostic state introspection**, **runtime defense slicing bounds checking**, and **dynamic argument filtering**.
----
+## Why pvectl?
 
-## High-Performance Architecture Features  
+Proxmox VE is powerful, but its native command-line ecosystem is deeply fragmented. During a high-stress infrastructure incident, engineers are forced to context-switch between disparate utilities:
+* `pvecm` for cluster operations
+* `qm` for QEMU Virtual Machines
+* `pct` for LXC Containers
+* `pvesm` for storage backends
 
-* **Decoupled Architecture (`pve.go` & `main.go`)**: Strict separation of concerns (SoC). API interaction, data modeling, and validation logic are fully separated from the main runner routine to maximize code reusability.
-* **Enterprise Defense Engineering**: 
-  * Array slicing features proactive boundary runtime checking (`maxDisplay` fallback) to safely mitigate out-of-bounds runtime panic vectors.
-  * Custom error handling (`PveApiError`) leveraging Go's structural type assertion to isolate HTTP fault boundaries from transport network anomalies.
-* **Dynamic CLI Arguments Control**: Built-in native concurrency-safe argument parsing flags (`-limit` and `-filter`) using asynchronous pointer referencing/dereferencing models.
-* **Dual-Stream Telemetry Recording**: Utilizing `io.MultiWriter` pipelines to fork stdout diagnostics directly onto system files (`cluster_health.log`) simultaneously in real-time.
+**pvectl** unifies these fragmented control planes into a single, cohesive, binary engine. It transitions your operational workflow from a passive "API Wrapper" into an active "Expert Diagnostic System" tailored for SREs and Infrastructure Engineers managing high-density environments.
 
 ---
 
-## Getting Started
+## Core Command Hierarchy Architecture
 
-### 1. Prerequisites
-* Go Language compiler (v1.18+ recommended)
-* A running Proxmox VE instance with active API Token credentials
+To accelerate triage during disaster recovery scenarios (such as power outages or ELK observability blindness), `pvectl` organizes its capabilities into specialized execution modes:
 
-### 2. Infrastructure Environment Matrix (.env)
-Create a `.env` configuration template file in the project's root directory:
-```env
-PVE_API_URL="https://YOUR_PVE_IP_OR_DOMAIN:8006/api2/json"
-PVE_TOKEN_ID="root@pve!your-token-name"
-PVE_SECRET="your-proxmox-api-token-secret-uuid"
-```
-### 3. Compilation & Runtime Instantiation
+### 1. `pvectl doctor` (The Telemetry Health Assessment)
+Performs automated assertions across the entire cluster topography to generate a holistic health scoring report.
+* **Triage Scope**: Corosync connectivity, Quorum validation, Node reachability, and Replication statuses.
+* **Operational Value**: Instantly exposes split-brain or network isolation issues without manual cross-referencing.
 
-To execute the modularized workspace concurrently, initiate the directory run command:
-```
-go run .
-```
-### Advanced CLI Operational Telemetry Manual
+### 2. `pvectl diagnose` (Deep-Dive Triage Engine)
+Collects and aggregates real-time telemetry from physical hypervisors down to individual workloads.
+* **Triage Scope**: Compiles Compute (CPU/Mem Overcommit), Storage pools, Bridges, and VM/CT status metrics.
+* **Output Formats**: Supports standard ANSI tables, `--json`, and `--yaml` for seamless workflow integration.
 
-The utility ships with native, dynamic runtime evaluation overrides. You can dynamically filter workloads and toggle limits directly from your terminal interface without recompiling source codes:
-A. Telemetry Scope Slicing Limit (-limit)
+### 3. `pvectl workflow recover` (Autonomous Disaster Recovery)
+An active automation runbook that sequentially validates the cluster state and gracefully orchestrates workload recovery post-incident.
 
-Restrict the dashboard display ceiling safely (Default: 3).
-```
-go run . -limit 5
-```
-B. Compute Workload Status Filtering (-filter)
+---
 
-Isolate cluster assets dynamically by target statuses (Options: running, stopped, all. Default: running).
-```
-# Audit hypervisor components that are currently powered down
-go run . -filter stopped
+## Roadmap
 
-# Retrieve comprehensive workload records across all statuses
-go run . -filter all
-```
-C. Advanced Multi-Argument Composition
-```
-go run . -limit 10 -filter all
-```
-D. Automated System Usage Manual
-
-Generate embedded telemetry flags definition matrices directly:
-```
-go run . -h
-```
-!
-### Core Operational Flow Data Visualization
-```
-[User Input Switch] ──► flag.Parse() ──► Pointer Dereference (*) ──► filterStatus Whiteboard
-                                                                             │
-[Proxmox Cluster]   ──► JSON Stream  ──► Unmarshal Structural Slices ────► Guard Inspection (if/continue)
-                                                                             │
-                                                                             ▼
-                                                                 Dual-Stream MultiWriter Output
-                                                                 (Console Monitor & cluster_health.log)
-```
-
-
+- [x] Pre-allocated resource maps to eliminate inner-loop runtime memory rehashing.
+- [x] Thread-safe decoupled parsing engine for localized node telemetry.
+- [ ] Implement `pvectl doctor` automated assertion engine.
+- [ ] Integrate Cobra CLI framework for advanced subcommand profiles and shell auto-completion.
+- [ ] Support structured structured logging and JSON output configurations.
