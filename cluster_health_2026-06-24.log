@@ -1,0 +1,58 @@
+
+Cluster
+--------
+✔ Quorum
+✔ Corosync
+✔ All Nodes Reachable
+
+Storage
+--------
+✔ local-lvm
+✔ nfs-storage
+
+Summary
+--------
+Health Score: 93/100
+⚡ Collecting Comprehensive Infrastructure Telemetry...
+
+[Success] Fetched Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve2   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  2.66GB / 15.62GB (17.05%)
+[1] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  8.19GB / 31.35GB (26.13%)
+[2] Node: pve1   | Status: online | Real CPU:  0.00% (0 Cores) | Mem: 15.46GB / 31.35GB (49.31%)
+
+[Telemetry] Displaying top 2 high-risk VM workloads (Sorted by CPU):
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-24 10:09:20
+Total Running VMs in Cluster : 4 🟢
+Total Stopped VMs in Cluster : 9 🔴
+--------------------------------------------------------------------------------
+Collecting Comprehensive Infrastructure Telemetry...
+
+[Success] Fetched Cluster Nodes Successfully!
+--------------------------------------------------------------------------------
+[0] Node: pve2   | Status: online | Real CPU: 14.32% (0 Cores) | Mem:  2.81GB / 15.62GB (17.97%)
+[1] Node: pve3   | Status: online | Real CPU:  0.00% (0 Cores) | Mem:  8.28GB / 31.35GB (26.41%)
+[2] Node: pve1   | Status: online | Real CPU: 26.36% (0 Cores) | Mem: 15.45GB / 31.35GB (49.29%)
+
+[Telemetry] Displaying top 2 high-risk VM workloads (Sorted by CPU):
+
+[Cluster Workload Health Summary] - Generated at: 2026-06-24 10:10:11
+Total Running VMs in Cluster : 4 🟢
+Total Stopped VMs in Cluster : 9 🔴
+--------------------------------------------------------------------------------
+
+Cluster
+--------
+✔ Quorum
+✔ Corosync
+✔ All Nodes Reachable
+
+Storage
+--------
+✔ local-lvm
+✔ nfs-storage
+
+Summary
+--------
+Health Score: 93/100
