@@ -56,3 +56,78 @@ Storage
 Summary
 --------
 Health Score: 93/100
+
+Cluster
+--------
+✔ Quorum (Simulation)
+✔ Corosync (Simulation)
+✔ All Nodes Reachable
+
+Storage
+--------
+✔ local-lvm (Simulation)
+✔ nfs-storage (Simulation)
+
+Summary
+--------
+Health Score: 93/100 (Simulation)
+
+Cluster
+--------
+✔ Quorum (Simulation)
+✔ Corosync (Simulation)
+✔ All Nodes Reachable
+
+Storage
+--------
+✔ local-lvm (Simulation)
+✔ nfs-storage (Simulation)
+
+Summary
+--------
+Health Score: 93/100 (Simulation)
+
+Cluster
+--------
+✔ Quorum (Simulation)
+✔ Corosync (Simulation)
+✔ All Nodes Reachable
+
+Storage
+--------
+✔ local-lvm (Simulation)
+✔ nfs-storage (Simulation)
+
+Summary
+--------
+Health Score: 93/100 (Simulation)
+
+Cluster
+--------
+✔ Quorum (Simulation)
+✔ Corosync (Simulation)
+✔ All Nodes Reachable
+
+Storage
+--------
+✔ local-lvm (Simulation)
+✔ nfs-storage (Simulation)
+
+Summary
+--------
+Health Score: 93/100 (Simulation)
+
+Cluster
+--------
+✔ Quorum (Simulation)
+✔ Corosync (Simulation)
+❌ Nodes Distressed! Dead Nodes Cluster: [pve2]
+
+Storage
+--------
+✔ local-lvm (Simulation)
+✔ nfs-storage (Simulation)
+
+Summary
+--------
+Health Score: 93/100 (Simulation)

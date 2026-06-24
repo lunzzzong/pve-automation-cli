@@ -12,10 +12,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// ==========================================
-// 1. DATA STRUCTS & CUSTOM ERROR
-// ==========================================
-// Create new noderesult struct
+// =========================================================================
+// 1. DATA STRUCTS & CUSTOM ERROR BOUNDARIES
+// =========================================================================
+
+// NodeResult defines the clean operational domain model exposed to the presentation layer
 type NodeResult struct {
 	Name       string
 	Status     string
@@ -82,12 +83,12 @@ type PveVmsResponse struct {
 	Data []PveVmData `json:"data"`
 }
 
-// REFACTORED: TitleCase naming standard alignment to bridge main.go interfaces
+// VMList implements sort.Interface to unlock native high-risk classification ranking
 type VMList []PveVmData
 
-// ==========================================
-// 2. CONSTRUCTORS & METHOD DEFINITIONS
-// ==========================================
+// =========================================================================
+// 2. CONSTRUCTORS & API TRANSPORT LAYER IMPLEMENTATIONS
+// =========================================================================
 
 // NewPveClient acts as a low-level constructor allocating a custom transport pipeline with TLS bypass
 func NewPveClient(apiUrl, tokenID, secret string) *PveClient {
@@ -203,29 +204,23 @@ func (v VMList) Len() int {
 }
 
 // Swap exchanges elements out-of-order in-place securely using native tuple decoupling
-// MODIFIED: Capitalized 'Swap' to implement sort.Interface properly
 func (v VMList) Swap(i, j int) {
 	v[i], v[j] = v[j], v[i]
 }
 
 // Less evaluates ordering parameters to achieve descending risk allocation metrics
-// MODIFIED: Capitalized 'Less' and switched field pointer to the verified uppercase .CPU
 func (v VMList) Less(i, j int) bool {
 	return v[i].CPU > v[j].CPU
 }
 
 // FetchAndParseVms acts as a high-level domain orchestrator that encapsulates
 // the entire raw network transport layer and JSON unmarshalling guardrails.
-// It abstracts away the raw string payload and returns a clean, decoupled VMList slice.
 func (c *PveClient) FetchAndParseVms() (VMList, error) {
-	// 1. Dispatch the underlying low-level resource resource endpoint request
 	statusCode, rawJson, err := c.GetVms()
 	if err != nil {
-		// Using %w to implement modern error wrapping for deep telemetry tracing
 		return nil, fmt.Errorf("failed to fetch cluster resources: %w", err)
 	}
 
-	// 2. Assert HTTP transport status boundaries securely
 	if statusCode != http.StatusOK {
 		return nil, &PveApiError{
 			StatusCode: statusCode,
@@ -233,26 +228,18 @@ func (c *PveClient) FetchAndParseVms() (VMList, error) {
 		}
 	}
 
-	// 3. Allocate a structured memory buffer acting as the target data receiver
 	var vmsResp PveVmsResponse
-
-	// 4. Invoke the unmarshal worker by passing the memory address pointer (&vmsResp)
-	// This dynamically decodes the raw byte slice into the allocated struct fields
 	err = json.Unmarshal([]byte(rawJson), &vmsResp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal internal PVE VMs data payload: %w", err)
 	}
 
-	// 5. Extract and propagate the cleanly parsed data slice up to the main logic pipeline
 	return vmsResp.Data, nil
 }
 
 // FetchAndParseNodesDetailed acts as an aggregation orchestrator that dispatches
 // N+1 infrastructure telemetry inquiries across the cluster.
-// It automatically encapsulates transport parsing, dynamic resource calculation,
-// and filters out downstream failures to return a clean slice of NodeResult domain models.
 func (c *PveClient) FetchAndParseNodesDetailed() ([]NodeResult, error) {
-	// 1. Dispatch the primary cluster registry request to obtain the global node manifest
 	_, rawJson, err := c.GetNodes()
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch cluster inventory nodes list: %w", err)
@@ -263,20 +250,43 @@ func (c *PveClient) FetchAndParseNodesDetailed() ([]NodeResult, error) {
 		return nil, fmt.Errorf("failed to unmarshal infrastructure nodes list payload: %w", err)
 	}
 
-	// 2. Pre-allocate a structured telemetry buffer tracking dynamic system health metrics
 	var finalResults []NodeResult
 
-	// 3. Initiate sequential resource lookup pipelines for each active hypervisor node
 	for _, nodeItem := range nodesResp.Data {
 		_, statusJson, err := c.GetNodeStatus(nodeItem.Node)
+
+		// 🌟 STARS INDICATOR: EXPLICIT FAULT ISOLATION HANDLER
+		// 🌟 Why: If a node is down (e.g. shutdown), GetNodeStatus returns an error.
+		// 🌟 Instead of silently skipping it via 'continue' (which hides the failure from the doctor command),
+		// 🌟 we capture the dead node, explicitly stamp its status as "offline", and append it to results.
 		if err != nil {
-			// Fault Tolerance Guardrail: Securely skip disconnected/unreachable nodes
-			// without crashing the global control loop telemetry
+			deadNode := NodeResult{
+				Name:       nodeItem.Node, // 🌟 Restored missing field variable reference
+				Status:     "offline",     // 🌟 Overwrote with explicit "offline" status to trip upstream health triggers
+				CpuPercent: 0.0,
+				CpuCores:   0,
+				MemUsedGB:  0.0,
+				MemTotalGB: 0.0,
+				MemPercent: 0.0,
+			}
+
+			// 🌟 Propagate the distressed host profile into the primary telemetry stream
+			finalResults = append(finalResults, deadNode)
+
+			// 🌟 Critical Control Flow Guard: Advance loop to the next node immediately,
+			// 🌟 preventing downstream JSON unmarshaler from processing a blank/invalid status payload.
 			continue
 		}
 
 		var statusResp PveNodeStatusResponse
 		if err := json.Unmarshal([]byte(statusJson), &statusResp); err != nil {
+			// 🌟 STARS INDICATOR: ANOMALOUS JSON PAYLOAD SAFEGUARD
+			// 🌟 Why: If parsing fails but network was OK, treat it as a corrupted/anomalous telemetry state.
+			anomalousNode := NodeResult{
+				Name:   nodeItem.Node,
+				Status: "error",
+			}
+			finalResults = append(finalResults, anomalousNode)
 			continue
 		}
 
@@ -300,7 +310,6 @@ func (c *PveClient) FetchAndParseNodesDetailed() ([]NodeResult, error) {
 		finalResults = append(finalResults, singleNode)
 	}
 
-	// 7. Yield the fully populated cluster health snapshot up to the main application presentation layer
 	return finalResults, nil
 }
 

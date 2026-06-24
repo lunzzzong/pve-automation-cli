@@ -80,18 +80,46 @@ func main() {
 func runDoctorRoutine(mw io.Writer, client *PveClient) {
 	fmt.Fprintln(mw, "\nCluster")
 	fmt.Fprintln(mw, "--------")
-	fmt.Fprintln(mw, "✔ Quorum")
-	fmt.Fprintln(mw, "✔ Corosync")
-	fmt.Fprintln(mw, "✔ All Nodes Reachable")
+	fmt.Fprintln(mw, "✔ Quorum (Simulation)")
+	fmt.Fprintln(mw, "✔ Corosync (Simulation)")
 
+	// Dispatch synchronized telemetry broker request to poll live hypervisor topology
+	nodesData, err := client.FetchAndParseNodesDetailed()
+	if err != nil {
+		fmt.Fprintf(mw, "❌ All Nodes Unreachable (API Connectivity Failed: %v)\n", err)
+		return
+	}
+
+	// Initialize localized state flags to capture physical host failure domains
+	allNodesHealthy := true
+	var deadNodes []string
+
+	// Enumerate hypervisor clusters to evaluate host runtime operational telemetry
+	for _, nodeItem := range nodesData {
+		// Assert node availability state against the upstream orchestration standard
+		if nodeItem.Status != "online" {
+			allNodesHealthy = false
+			deadNodes = append(deadNodes, nodeItem.Name)
+		}
+	}
+
+	// Evaluate systemic state machine flag to formulate control plane diagnostics
+	if allNodesHealthy {
+		fmt.Fprintln(mw, "✔ All Nodes Reachable")
+	} else {
+		// Log explicit fault isolation data containing high-risk distressed targets
+		fmt.Fprintf(mw, "❌ Nodes Distressed! Dead Nodes Cluster: %v\n", deadNodes)
+	}
+
+	// ---- Downstream Subsystems (Temporary Static Mock Framework) ----
 	fmt.Fprintln(mw, "\nStorage")
 	fmt.Fprintln(mw, "--------")
-	fmt.Fprintln(mw, "✔ local-lvm")
-	fmt.Fprintln(mw, "✔ nfs-storage")
+	fmt.Fprintln(mw, "✔ local-lvm (Simulation)")
+	fmt.Fprintln(mw, "✔ nfs-storage (Simulation)")
 
 	fmt.Fprintln(mw, "\nSummary")
 	fmt.Fprintln(mw, "--------")
-	fmt.Fprintln(mw, "Health Score: 93/100")
+	fmt.Fprintln(mw, "Health Score: 93/100 (Simulation)")
 }
 
 // =========================================================================
