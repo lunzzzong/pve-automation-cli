@@ -131,3 +131,18 @@ Storage
 Summary
 --------
 Health Score: 93/100 (Simulation)
+
+Cluster
+--------
+✔ Quorum (Simulation)
+✔ Corosync (Simulation)
+✔ All Nodes Reachable
+
+Storage
+--------
+✔ local-lvm (Simulation)
+✔ nfs-storage (Simulation)
+
+Summary
+--------
+Health Score: 93/100 (Simulation)

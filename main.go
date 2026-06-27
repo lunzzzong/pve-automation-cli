@@ -94,13 +94,24 @@ func runDoctorRoutine(mw io.Writer, client *PveClient) {
 	allNodesHealthy := true
 	var deadNodes []string
 
+	// DYNAMIC METRICS: Initialize a perfect baseline score
+	healthScore := 100
+
 	// Enumerate hypervisor clusters to evaluate host runtime operational telemetry
 	for _, nodeItem := range nodesData {
 		// Assert node availability state against the upstream orchestration standard
 		if nodeItem.Status != "online" {
 			allNodesHealthy = false
 			deadNodes = append(deadNodes, nodeItem.Name)
+
+			// 💡 DYNAMIC METRICS: Deduct 20 points dynamically for each distressed host
+			healthScore -= 20
 		}
+	}
+
+	// DEFENSIVE GUARDRAIL: Prevent the telemetry score from dropping into negative bounds
+	if healthScore < 0 {
+		healthScore = 0
 	}
 
 	// Evaluate systemic state machine flag to formulate control plane diagnostics
@@ -117,9 +128,10 @@ func runDoctorRoutine(mw io.Writer, client *PveClient) {
 	fmt.Fprintln(mw, "✔ local-lvm (Simulation)")
 	fmt.Fprintln(mw, "✔ nfs-storage (Simulation)")
 
+	// PLUG DYNAMIC SCORE: Render metrics driven output summary
 	fmt.Fprintln(mw, "\nSummary")
 	fmt.Fprintln(mw, "--------")
-	fmt.Fprintln(mw, "Health Score: 93/100 (Simulation)")
+	fmt.Fprintf(mw, "Health Score: %d/100\n", healthScore)
 }
 
 // =========================================================================
