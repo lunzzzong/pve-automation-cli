@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -50,7 +51,6 @@ func main() {
 	subcommand := os.Args[1]
 
 	// Initialize secure Proxmox API client backend from local environment state variables
-	// We instantiate the client here so it's ready for any upstream routine consumption
 	client, err := NewPveClientFromEnv()
 	if err != nil {
 		fmt.Fprintf(mw, "[CRITICAL] Infrastructure controller initialization failed: %v\n", err)
@@ -72,66 +72,118 @@ func main() {
 		fmt.Fprintf(mw, "[ERROR] Unknown tactical subcommand '%s'. Execute 'pvectl' for operational help.\n", subcommand)
 		os.Exit(1)
 	}
-} // PERFECT MIGRATION: main() function now gracefully concludes here!
+}
 
 // =========================================================================
 // pvectl doctor: Health Check Assertion Engine
 // =========================================================================
 func runDoctorRoutine(mw io.Writer, client *PveClient) {
-	fmt.Fprintln(mw, "\nCluster")
+	// ANSI TERMINAL ESCAPE CODES FOR HIGH-IMPACT VISUALIZATION
+	const (
+		ColorGreen  = "\033[32m"
+		ColorRed    = "\033[31m"
+		ColorYellow = "\033[33m"
+		ColorReset  = "\033[0m"
+	)
+
+	// Render colored sub-section headers for terminal clarity
+	fmt.Fprintf(mw, "\n%sCluster%s\n", ColorYellow, ColorReset)
 	fmt.Fprintln(mw, "--------")
-	fmt.Fprintln(mw, "✔ Quorum (Simulation)")
-	fmt.Fprintln(mw, "✔ Corosync (Simulation)")
+	fmt.Fprintf(mw, "%s✔%s Quorum (Simulation)\n", ColorGreen, ColorReset)
+	fmt.Fprintf(mw, "%s✔%s Corosync (Simulation)\n", ColorGreen, ColorReset)
 
 	// Dispatch synchronized telemetry broker request to poll live hypervisor topology
 	nodesData, err := client.FetchAndParseNodesDetailed()
 	if err != nil {
-		fmt.Fprintf(mw, "❌ All Nodes Unreachable (API Connectivity Failed: %v)\n", err)
+		fmt.Fprintf(mw, "%s❌%s All Nodes Unreachable (API Connectivity Failed: %v)\n", ColorRed, ColorReset, err)
 		return
 	}
 
-	// Initialize localized state flags to capture physical host failure domains
 	allNodesHealthy := true
 	var deadNodes []string
-
-	// DYNAMIC METRICS: Initialize a perfect baseline score
 	healthScore := 100
+
+	// Local data structure to buffer distributed node-level storage reports prior to UI rendering
+	type storageReportItem struct {
+		output string
+		active bool
+	}
+	var storageReports []storageReportItem
 
 	// Enumerate hypervisor clusters to evaluate host runtime operational telemetry
 	for _, nodeItem := range nodesData {
-		// Assert node availability state against the upstream orchestration standard
 		if nodeItem.Status != "online" {
 			allNodesHealthy = false
 			deadNodes = append(deadNodes, nodeItem.Name)
-
-			// 💡 DYNAMIC METRICS: Deduct 20 points dynamically for each distressed host
+			// Deduct 20 points dynamically for each distressed host
 			healthScore -= 20
+			continue // FAULT BOUNDARY: Skip storage probing if the host itself is down
+		}
+
+		// INTERSECT LIVE NODE STORAGE: Intercept single node storage pool metrics to bypass 501 restrictions
+		sStatus, sJson, sErr := client.GetNodeStorage(nodeItem.Name)
+		if sErr == nil && sStatus == 200 {
+			var nodeStorageResp PveStorageResponse
+			if json.Unmarshal([]byte(sJson), &nodeStorageResp) == nil {
+				for _, storeItem := range nodeStorageResp.Data {
+					// Assert if the targeted local storage volume is flagged as active
+					if storeItem.Active != 1 {
+						report := fmt.Sprintf("%s❌ %s/%s (%s) [DISTRESSED / OFFLINE]%s\n", ColorRed, nodeItem.Name, storeItem.Storage, storeItem.Type, ColorReset)
+						storageReports = append(storageReports, storageReportItem{output: report, active: false})
+						// Deduct 15 points dynamically for each distressed storage backend
+						healthScore -= 15
+					} else {
+						report := fmt.Sprintf("%s✔%s %s/%s (%s)\n", ColorGreen, ColorReset, nodeItem.Name, storeItem.Storage, storeItem.Type)
+						storageReports = append(storageReports, storageReportItem{output: report, active: true})
+					}
+				}
+			}
 		}
 	}
 
-	// DEFENSIVE GUARDRAIL: Prevent the telemetry score from dropping into negative bounds
+	// Render Node telemetry status with explicit color mappings
+	if allNodesHealthy {
+		fmt.Fprintf(mw, "%s✔%s All Nodes Reachable\n", ColorGreen, ColorReset)
+	} else {
+		fmt.Fprintf(mw, "%s❌ Nodes Distressed! Dead Nodes Cluster: %v%s\n", ColorRed, deadNodes, ColorReset)
+	}
+
+	// =========================================================================
+	// STORAGE PRESENTATION LAYER: LIVE PHYSICAL NODE STORAGE INFRASTRUCTURE
+	// =========================================================================
+	fmt.Fprintf(mw, "\n%sStorage%s\n", ColorYellow, ColorReset)
+	fmt.Fprintln(mw, "--------")
+
+	// Flush buffered telemetry stream outputs into the terminal console
+	if len(storageReports) == 0 {
+		fmt.Fprintf(mw, "%s❌%s No storage pools discovered or nodes unreachable\n", ColorRed, ColorReset)
+	} else {
+		for _, r := range storageReports {
+			fmt.Print(r.output)
+		}
+	}
+
+	// Defensive Guardrail bounds checks to block negative telemetry numbers
 	if healthScore < 0 {
 		healthScore = 0
 	}
 
-	// Evaluate systemic state machine flag to formulate control plane diagnostics
-	if allNodesHealthy {
-		fmt.Fprintln(mw, "✔ All Nodes Reachable")
-	} else {
-		// Log explicit fault isolation data containing high-risk distressed targets
-		fmt.Fprintf(mw, "❌ Nodes Distressed! Dead Nodes Cluster: %v\n", deadNodes)
+	// =========================================================================
+	// SUMMARY PRESENTATION LAYER WITH DYNAMIC WEIGHT COLORATION
+	// =========================================================================
+	fmt.Fprintf(mw, "\n%sSummary%s\n", ColorYellow, ColorReset)
+	fmt.Fprintln(mw, "--------")
+
+	// Dynamically transition score representation color strings according to risk thresholds
+	scoreColor := ColorGreen
+	if healthScore < 60 {
+		scoreColor = ColorRed
+	} else if healthScore < 90 {
+		scoreColor = ColorYellow
 	}
 
-	// ---- Downstream Subsystems (Temporary Static Mock Framework) ----
-	fmt.Fprintln(mw, "\nStorage")
-	fmt.Fprintln(mw, "--------")
-	fmt.Fprintln(mw, "✔ local-lvm (Simulation)")
-	fmt.Fprintln(mw, "✔ nfs-storage (Simulation)")
-
-	// PLUG DYNAMIC SCORE: Render metrics driven output summary
-	fmt.Fprintln(mw, "\nSummary")
-	fmt.Fprintln(mw, "--------")
-	fmt.Fprintf(mw, "Health Score: %d/100\n", healthScore)
+	// Render fully dynamic, decoupled system metric scores safely without simulation tags
+	fmt.Fprintf(mw, "Health Score: %s%d%s/100\n", scoreColor, healthScore, ColorReset)
 }
 
 // =========================================================================
@@ -140,14 +192,12 @@ func runDoctorRoutine(mw io.Writer, client *PveClient) {
 func runDiagnoseRoutine(mw io.Writer, client *PveClient, limit int, filterStatus string) {
 	fmt.Fprintln(mw, "Collecting Comprehensive Infrastructure Telemetry...")
 
-	// 1. Dispatch telemetry request via the parsing broker to fetch detailed hypervisor states
 	nodesData, err := client.FetchAndParseNodesDetailed()
 	if err != nil {
 		fmt.Fprintf(mw, "[CRITICAL] Node Telemetry retrieval failed: %v\n", err)
 		return
 	}
 
-	// 2. Render structured hypervisor cluster matrix
 	fmt.Fprintln(mw, "\n[Success] Fetched Cluster Nodes Successfully!")
 	fmt.Fprintln(mw, "--------------------------------------------------------------------------------")
 	for index, nodeItem := range nodesData {
@@ -155,14 +205,12 @@ func runDiagnoseRoutine(mw io.Writer, client *PveClient, limit int, filterStatus
 			index, nodeItem.Name, nodeItem.Status, nodeItem.CpuPercent, nodeItem.CpuCores, nodeItem.MemUsedGB, nodeItem.MemTotalGB, nodeItem.MemPercent)
 	}
 
-	// 3. Query centralized client for virtualized workload telemetry volume
 	vmsData, err := client.FetchAndParseVms()
 	if err != nil {
 		fmt.Fprintf(mw, "[CRITICAL] VM Telemetry retrieval failed: %v\n", err)
 		return
 	}
 
-	// 4. Enforce pre-allocated map allocations to block runtime hashmap growth rehash spikes
 	const MaxExpectedClusterWorkloads = 150
 	statusCounter := make(map[string]int, MaxExpectedClusterWorkloads)
 	for _, vmItem := range vmsData {
@@ -171,21 +219,17 @@ func runDiagnoseRoutine(mw io.Writer, client *PveClient, limit int, filterStatus
 		}
 	}
 
-	// 5. Orchestrate high-risk classification by sorting workloads natively via CPU footprints
 	sort.Sort(vmsData)
 
-	// 6. Calculate safe boundaries for display windows to dodge slice out-of-bounds runtime panics
 	maxDisplay := limit
 	if len(vmsData) < limit {
 		maxDisplay = len(vmsData)
 	}
 	limitedVMs := vmsData[0:maxDisplay]
 
-	// 7. Render high-risk virtualized computing instances dashboard
 	fmt.Fprintf(mw, "\n[Telemetry] Displaying top %d high-risk VM workloads (Sorted by CPU):\n", maxDisplay)
 	for _, vmItem := range limitedVMs {
 		if vmItem.Type == "qemu" {
-			// Apply operational runtime state filtering constraints
 			if filterStatus != "all" && vmItem.Status != filterStatus {
 				continue
 			}
@@ -194,7 +238,6 @@ func runDiagnoseRoutine(mw io.Writer, client *PveClient, limit int, filterStatus
 		}
 	}
 
-	// 8. Generate execution timestamp metrics and formulate cluster health summaries
 	formattedTime := time.Now().Format("2006-01-02 15:04:05")
 	fmt.Fprintf(mw, "\n[Cluster Workload Health Summary] - Generated at: %s\n", formattedTime)
 	fmt.Fprintf(mw, "Total Running VMs in Cluster : %d 🟢\n", statusCounter["running"])

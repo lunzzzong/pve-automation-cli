@@ -86,6 +86,18 @@ type PveVmsResponse struct {
 // VMList implements sort.Interface to unlock native high-risk classification ranking
 type VMList []PveVmData
 
+// PveStorageData models the JSON schema for individual cluster storage allocations
+type PveStorageData struct {
+	Storage string `json:"storage"`
+	Type    string `json:"type"`
+	Active  int    `json:"active"` // 1 indicates active/online, 0 indicates inactive/unreachable
+}
+
+// PveStorageResponse encapsulates the root JSON data payload returned by cluster storage endpoints
+type PveStorageResponse struct {
+	Data []PveStorageData `json:"data"`
+}
+
 // =========================================================================
 // 2. CONSTRUCTORS & API TRANSPORT LAYER IMPLEMENTATIONS
 // =========================================================================
@@ -256,32 +268,22 @@ func (c *PveClient) FetchAndParseNodesDetailed() ([]NodeResult, error) {
 		_, statusJson, err := c.GetNodeStatus(nodeItem.Node)
 
 		// 🌟 STARS INDICATOR: EXPLICIT FAULT ISOLATION HANDLER
-		// 🌟 Why: If a node is down (e.g. shutdown), GetNodeStatus returns an error.
-		// 🌟 Instead of silently skipping it via 'continue' (which hides the failure from the doctor command),
-		// 🌟 we capture the dead node, explicitly stamp its status as "offline", and append it to results.
 		if err != nil {
 			deadNode := NodeResult{
-				Name:       nodeItem.Node, // 🌟 Restored missing field variable reference
-				Status:     "offline",     // 🌟 Overwrote with explicit "offline" status to trip upstream health triggers
+				Name:       nodeItem.Node,
+				Status:     "offline",
 				CpuPercent: 0.0,
 				CpuCores:   0,
 				MemUsedGB:  0.0,
 				MemTotalGB: 0.0,
 				MemPercent: 0.0,
 			}
-
-			// 🌟 Propagate the distressed host profile into the primary telemetry stream
 			finalResults = append(finalResults, deadNode)
-
-			// 🌟 Critical Control Flow Guard: Advance loop to the next node immediately,
-			// 🌟 preventing downstream JSON unmarshaler from processing a blank/invalid status payload.
 			continue
 		}
 
 		var statusResp PveNodeStatusResponse
 		if err := json.Unmarshal([]byte(statusJson), &statusResp); err != nil {
-			// 🌟 STARS INDICATOR: ANOMALOUS JSON PAYLOAD SAFEGUARD
-			// 🌟 Why: If parsing fails but network was OK, treat it as a corrupted/anomalous telemetry state.
 			anomalousNode := NodeResult{
 				Name:   nodeItem.Node,
 				Status: "error",
@@ -290,27 +292,50 @@ func (c *PveClient) FetchAndParseNodesDetailed() ([]NodeResult, error) {
 			continue
 		}
 
-		// 4. Transform raw byte streams natively into floating-point Gigabyte metrics
 		memUsed := float64(statusResp.Data.Memory.Used) / 1024 / 1024 / 1024
 		memTotal := float64(statusResp.Data.Memory.Total) / 1024 / 1024 / 1024
 		memPercent := (memUsed / memTotal) * 100
 
-		// 5. Hydrate the structured NodeResult data container with the calculated telemetry state
 		singleNode := NodeResult{
 			Name:       nodeItem.Node,
 			Status:     nodeItem.Status,
-			CpuPercent: statusResp.Data.Cpu * 100, // Normalize raw decimal into explicit percentage representation
+			CpuPercent: statusResp.Data.Cpu * 100,
 			CpuCores:   statusResp.Data.MaxCpu,
 			MemUsedGB:  memUsed,
 			MemTotalGB: memTotal,
 			MemPercent: memPercent,
 		}
 
-		// 6. Propagate the newly aggregated metrics node structure into the final collection slice
 		finalResults = append(finalResults, singleNode)
 	}
 
 	return finalResults, nil
+}
+
+// GetClusterStorage dispatches a transport token to securely fetch global infrastructure storage pools
+// Added on 2026-06-30 to bridge the physical storage tracking layer
+func (c *PveClient) GetNodeStorage(nodeName string) (int, string, error) {
+	reqUrl := fmt.Sprintf("%s/nodes/%s/storage", c.ApiUrl, nodeName)
+
+	req, err := http.NewRequest("GET", reqUrl, nil)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to create node storage request: %v", err)
+	}
+
+	authHeader := fmt.Sprintf("PVEAPIToken=%s=%s", c.TokenID, c.Secret)
+	req.Header.Add("Authorization", authHeader)
+
+	resp, err := c.HttpCli.Do(req)
+	if err != nil {
+		return 0, "", fmt.Errorf("failed to connect to PVE Node Storage API: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return resp.StatusCode, "", fmt.Errorf("failed to read node storage response body: %v", err)
+	}
+	return resp.StatusCode, string(body), nil
 }
 
 // GetStatusIcon maps the raw lowercase VM status string to a production-ready console indicator emoji
